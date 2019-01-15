@@ -1,0 +1,9 @@
+org.springframework.context.ApplicationContextInitializer=\
+  com.boot.base.context.McnContextInitializer
+
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  com.boot.base.jersey.JerseySwaggerAutoConfiguration,\
+  com.boot.base.jwt.JwtTokenAutoConfiguration
+
+org.springframework.boot.env.EnvironmentPostProcessor=\
+  com.boot.base.context.McnPropertiesPostProcessor
