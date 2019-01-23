@@ -32,7 +32,7 @@ public class ErrorMsgUtil {
     static {
         ResourcePropertySource resourcePropertySource;
         try {
-            resourcePropertySource = new ResourcePropertySource("error-msg.properties");
+            resourcePropertySource = new ResourcePropertySource("base-error-msg.properties");
             mutablePropertySources.addLast(resourcePropertySource);
         } catch (IOException var3) {
 
