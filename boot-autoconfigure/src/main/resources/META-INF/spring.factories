@@ -1,6 +1,9 @@
 org.springframework.context.ApplicationContextInitializer=\
   com.boot.base.context.McnContextInitializer
 
+org.springframework.context.ApplicationListener=\
+  com.boot.base.context.McnApplicationListener
+
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
   com.boot.base.jersey.JerseySwaggerAutoConfiguration,\
   com.boot.base.jwt.JwtTokenAutoConfiguration
