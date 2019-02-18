@@ -194,4 +194,5 @@ public class JerseySwaggerAutoConfiguration extends ResourceConfig {
         return new JerseyHttp(clientProperties);
     }
 
+
 }

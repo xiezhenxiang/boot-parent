@@ -19,9 +19,6 @@ public class GeMybatis {
     @Autowired
     JwtToken jwtToken;
 
-    @Autowired
-    
-
     @Test
     public void jwtTest(){
 
