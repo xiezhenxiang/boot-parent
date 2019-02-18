@@ -18,11 +18,13 @@ import javax.sql.DataSource;
 @Configuration
 @ConditionalOnClass({DataSource.class, SqlSessionFactory.class, MapperScan.class})
 @ConditionalOnMissingBean({MapperFactoryBean.class})
+@ConditionOnSingleDatasource
 public class OnSingleDatasourceCondition implements Condition {
     public OnSingleDatasourceCondition() {
     }
 
     public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+
         Environment environment = context.getEnvironment();
         String[] dbs = (String[])environment.getProperty("multiply.datasource.name", String[].class);
         if (dbs == null || dbs.length == 0) {

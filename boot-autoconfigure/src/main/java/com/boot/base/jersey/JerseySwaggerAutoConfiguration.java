@@ -194,5 +194,13 @@ public class JerseySwaggerAutoConfiguration extends ResourceConfig {
         return new JerseyHttp(clientProperties);
     }
 
-
+    /*@Configuration
+    @ConditionalOnClass({DataSource.class, SqlSessionFactory.class, MapperScan.class})
+    @ConditionalOnMissingBean({MapperFactoryBean.class})
+    @ConditionOnSingleDatasource
+    public class QuickConfigMapperScan {
+        public QuickConfigMapperScan(){
+            System.out.println(555);
+        }
+    }*/
 }
