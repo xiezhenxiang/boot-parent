@@ -2,7 +2,6 @@ package com.boot.base.util;
 
 import com.boot.base.exception.JsonException;
 import com.google.gson.Gson;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 
 import java.lang.reflect.Type;
