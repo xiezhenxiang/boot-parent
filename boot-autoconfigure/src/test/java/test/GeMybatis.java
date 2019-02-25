@@ -21,7 +21,6 @@ public class GeMybatis {
 
     @Test
     public void jwtTest(){
-
         MybatisGenUtil.genMapperAndXml();
 
 

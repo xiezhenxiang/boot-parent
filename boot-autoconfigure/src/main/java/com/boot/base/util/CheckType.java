@@ -11,7 +11,7 @@ public class CheckType {
         if (str == null)
             return false;
         if (str instanceof String)
-            return StringUnit.haveTest(str.toString());
+            return !StringUtils.isNullOrEmpty(str.toString());
         return true;
     }
 
