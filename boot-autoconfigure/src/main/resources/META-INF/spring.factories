@@ -6,7 +6,8 @@ org.springframework.context.ApplicationListener=\
 
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
   indi.fly.boot.base.jersey.JerseySwaggerAutoConfiguration,\
-  indi.fly.boot.base.jwt.JwtTokenAutoConfiguration
+  indi.fly.boot.base.jwt.JwtTokenAutoConfiguration,\
+  indi.fly.boot.base.jersey.OnSingleDatasourceCondition
 
 org.springframework.boot.env.EnvironmentPostProcessor=\
   indi.fly.boot.base.context.McnPropertiesPostProcessor

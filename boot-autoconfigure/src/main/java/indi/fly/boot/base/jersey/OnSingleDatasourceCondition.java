@@ -33,7 +33,6 @@ public class OnSingleDatasourceCondition implements Condition {
             if (resourceLoader != null) {
                 scanner.setResourceLoader(resourceLoader);
             }
-
             scanner.registerFilters();
             String daoPackage = environment.getProperty("jersey.swagger.base-package") + ".dao";
             scanner.doScan(new String[]{daoPackage});
