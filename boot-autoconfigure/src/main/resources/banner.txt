@@ -8,4 +8,4 @@ ${AnsiColor.CYAN}
  (__) (__)     (__)       (__) (__) (__)
 
 ${AnsiColor.BRIGHT_GREEN} :: Spring Boot :: ${AnsiColor.DEFAULT}   ${AnsiColor.BRIGHT_MAGENTA}${spring-boot.formatted-version}
-${AnsiColor.BRIGHT_GREEN} :: Fly    Boot :: ${AnsiColor.DEFAULT}    ${AnsiColor.BRIGHT_MAGENTA}(v5.5.0.RELEASE)${AnsiColor.DEFAULT}
+${AnsiColor.BRIGHT_GREEN} :: Fly    Boot :: ${AnsiColor.DEFAULT}    ${AnsiColor.BRIGHT_MAGENTA}(v${fly.version}.RELEASE)${AnsiColor.DEFAULT}

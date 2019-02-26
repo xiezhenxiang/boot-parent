@@ -10,7 +10,6 @@ import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertiesPropertySource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
-import org.springframework.core.io.support.ResourcePropertySource;
 import org.springframework.util.ClassUtils;
 
 import java.io.IOException;
@@ -27,36 +26,19 @@ public class McnPropertiesPostProcessor implements EnvironmentPostProcessor, Ord
         MutablePropertySources propertySources = environment.getPropertySources();
         Map<String, Object> mapProp = Maps.newHashMap();
         mapProp.put("jersey.swagger.base-package", ClassUtils.getPackageName(application.getMainApplicationClass()));
-        mapProp.put("mcn.version", this.getClass().getPackage().getImplementationVersion());
+        mapProp.put("fly.version", this.getClass().getPackage().getImplementationVersion());
+
         mapProp.put("logging.level." + mapProp.get("jersey.swagger.base-package") + ".dao", "info");
-        propertySources.addLast(new MapPropertySource("mcn-map", mapProp));
+        propertySources.addLast(new MapPropertySource("init_prop", mapProp));
 
-        try {
-            propertySources.addLast(new ResourcePropertySource("mcn-global-unique", "classpath:config/mcn.properties"));
-        } catch (IOException var9) {
-            ;
-        }
-
-        try {
-            String[] activeProfiles = environment.getActiveProfiles();
-            StringBuilder globalConfigName = (new StringBuilder("classpath:")).append("mcn-global");
-            if (Objects.nonNull(activeProfiles) && activeProfiles.length > 0) {
-                globalConfigName.append("-").append(activeProfiles[0]);
-            }
-
-            globalConfigName.append(".properties");
-            propertySources.addLast(new ResourcePropertySource("mcn-global", globalConfigName.toString()));
-        } catch (IOException var8) {
-            ;
-        }
 
         try {
             String path = this.getClass().getResource("").getPath();
             path = path.replaceFirst("file:", "jar:file:");
             path = "file:" + path.replace(ClassUtils.getPackageName(this.getClass()).replace(".", "/"), "META-INF");
             propertySources.addLast(new PropertiesPropertySource("boot-default", PropertiesLoaderUtils.loadProperties(new UrlResource(path + "boot-default.properties"))));
-        } catch (IOException var7) {
-            //var7.printStackTrace();
+        } catch (IOException e) {
+            //e.printStackTrace();
         }
 
         try {
@@ -64,8 +46,8 @@ public class McnPropertiesPostProcessor implements EnvironmentPostProcessor, Ord
             path = path.replaceFirst("file:", "jar:file:");
             path = path.replace(ClassUtils.getPackageName(this.getClass()).replace(".", "/"), "META-INF");
             propertySources.addLast(new PropertiesPropertySource("boot-default", PropertiesLoaderUtils.loadProperties(new UrlResource(path + "boot-default.properties"))));
-        } catch (IOException var7) {
-            //var7.printStackTrace();
+        } catch (IOException e) {
+            //e.printStackTrace();
         }
 
     }
