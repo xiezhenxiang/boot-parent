@@ -82,7 +82,7 @@
         <dependencies>
 
             <dependency>
-                <groupId>com.fly</groupId>
+                <groupId>indi.fly.boot</groupId>
                 <artifactId>boot-autoconfigure</artifactId>
                 <version>${fly.version}</version>
             </dependency>
