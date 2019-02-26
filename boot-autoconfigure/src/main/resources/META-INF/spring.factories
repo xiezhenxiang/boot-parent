@@ -1,12 +1,12 @@
 org.springframework.context.ApplicationContextInitializer=\
-  com.boot.base.context.McnContextInitializer
+  indi.fly.boot.base.context.McnContextInitializer
 
 org.springframework.context.ApplicationListener=\
-  com.boot.base.context.McnApplicationListener
+  indi.fly.boot.base.context.McnApplicationListener
 
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-  com.boot.base.jersey.JerseySwaggerAutoConfiguration,\
-  com.boot.base.jwt.JwtTokenAutoConfiguration
+  indi.fly.boot.base.jersey.JerseySwaggerAutoConfiguration,\
+  indi.fly.boot.base.jwt.JwtTokenAutoConfiguration
 
 org.springframework.boot.env.EnvironmentPostProcessor=\
-  com.boot.base.context.McnPropertiesPostProcessor
+  indi.fly.boot.base.context.McnPropertiesPostProcessor

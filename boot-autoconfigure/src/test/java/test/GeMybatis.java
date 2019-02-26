@@ -1,8 +1,8 @@
 package test;
 
-import com.boot.App;
-import com.boot.base.jwt.JwtToken;
-import com.boot.base.util.MybatisGenUtil;
+import indi.fly.boot.App;
+import indi.fly.boot.base.jwt.JwtToken;
+import indi.fly.boot.base.util.MybatisGenUtil;
 import com.google.common.collect.Maps;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -20,10 +20,12 @@ public class GeMybatis {
     JwtToken jwtToken;
 
     @Test
-    public void jwtTest(){
+    public void geMybatis(){
         MybatisGenUtil.genMapperAndXml();
+    }
 
-
+    @Test
+    public void jwtTest(){
         HashMap m = Maps.newHashMap();
         m.put("id", "123");
         String str = jwtToken.createToken(m);
