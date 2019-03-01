@@ -1,28 +1,104 @@
 package indi.fly.boot.base.util;
 
-import java.io.BufferedReader;
+import javassist.util.proxy.ProxyFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.URL;
-import java.net.URLConnection;
+import java.io.InputStream;
+import java.net.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public final class HttpUtils {
+
+    private static Logger logger = LoggerFactory.getLogger(HttpUtils.class);
+
     public HttpUtils() {
     }
 
-    private static URLConnection openConnection(String url) throws IOException {
+    private static URLConnection openConnection(String url, String proxyIp, Integer proxyPort) throws IOException {
         URL realUrl = new URL(url);
-        URLConnection conn = realUrl.openConnection();
+        URLConnection conn;
+        if(StringUtils.check(proxyIp) && proxyPort != null){
+            InetSocketAddress proxyAddr = new InetSocketAddress(proxyIp, proxyPort);
+            Proxy proxy = new Proxy(Proxy.Type.HTTP, proxyAddr);
+            conn = realUrl.openConnection(proxy);
+        }else{
+            conn = realUrl.openConnection();
+        }
         conn.setRequestProperty("accept", "*/*");
         conn.setRequestProperty("connection", "Keep-Alive");
         conn.setRequestProperty("user-agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1;SV1)");
+        conn.setConnectTimeout(10*1000);
+        conn.setReadTimeout(15*1000);
         return conn;
     }
+
+    public static String sendGet(String url) {
+        return sendGet(url, null, null);
+    }
+
+    public static String sendGet(String url, String proxy_ip, Integer proxy_port) {
+        url = getHttpUrl(url);
+        String result = "";
+
+        try {
+            HttpURLConnection connection = (HttpURLConnection) openConnection(url, proxy_ip, proxy_port);
+            connection.connect();
+            int responseCode = connection.getResponseCode();
+            if (responseCode == 200) {
+                result = inputStreamTOString(connection.getInputStream(),"utf-8");
+            }else{
+                logger.info(url);
+                logger.info("Http Get请求获取不到源码，响应码为：" + responseCode);
+            }
+        } catch (Exception e) {
+            logger.info(url);
+            logger.info("Http Get请求获取源码异常：" + e.toString());
+        }
+        return result;
+    }
+
+    public static String sendGet(String url, Map<String, String> getParam) {
+        return sendGet(dealGetParam(url, getParam));
+    }
+
+    public static String sendPost(String url, Map<String, String> postParam) {
+        return sendPost(url, parseParam(postParam));
+    }
+
+    public static String sendPost(String url, Map<String, String> getParam, Map<String, String> postParam) {
+        return sendPost(dealGetParam(url, getParam), parseParam(postParam));
+    }
+
+    private static String sendPost(String url, String param) {
+        return sendPost(url, param, null, null);
+    }
+
+    private static String sendPost(String url, String param, String proxy_ip, Integer proxy_port) {
+        String result = "";
+        try {
+            HttpURLConnection conn = (HttpURLConnection) openConnection(url, proxy_ip, proxy_port);
+            conn.setDoOutput(true);
+            conn.setDoInput(true);
+
+            int responseCode = conn.getResponseCode();
+            if (responseCode == 200) {
+                result = inputStreamTOString(conn.getInputStream(),"utf-8");
+            }else {
+                logger.info(url);
+                logger.info("Http Post请求获取不到源码，响应码为：" + responseCode);
+            }
+        } catch (Exception e) {
+            logger.info(url);
+            logger.info("Http Post请求获取源码异常：" + e.toString());
+        }
+        return result;
+    }
+
 
     private static String parseParam(Map<String, String> param) {
         List<String> list = new ArrayList();
@@ -36,7 +112,7 @@ public final class HttpUtils {
                 sb.append("&");
             }
 
-            sb.append((String)list.get(i));
+            sb.append(list.get(i));
         }
 
         return sb.toString();
@@ -52,86 +128,23 @@ public final class HttpUtils {
         return url;
     }
 
-    public static String sendGet(String url) {
-        return sendGet(url, (Map)(new HashMap()));
-    }
-
-    public static String sendGet(String url, Map<String, String> getParam) {
-        return sendGet(dealGetParam(url, getParam), parseParam(getParam));
-    }
-
-    public static String sendPost(String url, Map<String, String> postParam) {
-        return sendPost(url, parseParam(postParam));
-    }
-
-    public static String sendPost(String url, Map<String, String> getParam, Map<String, String> postParam) {
-        return sendPost(dealGetParam(url, getParam), parseParam(postParam));
-    }
-
-    private static String sendGet(String url, String param) {
-        StringBuilder result = new StringBuilder();
-        BufferedReader in = null;
-
+    private static String getHttpUrl(String str) {
         try {
-            URLConnection connection = openConnection(url);
-            connection.connect();
-            in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-
-            String line;
-            while((line = in.readLine()) != null) {
-                result.append(line);
-            }
-        } catch (Exception var14) {
-            ;
-        } finally {
-            try {
-                if (in != null) {
-                    in.close();
-                }
-            } catch (Exception var13) {
-                ;
-            }
-
+            str = URLEncoder.encode(str, "utf-8").replace("%3A", ":")
+                    .replaceAll("%2F", "/");
+        }catch (Exception e){
+            e.printStackTrace();
         }
-
-        return result.toString();
+        return str;
     }
 
-    private static String sendPost(String url, String param) {
-        PrintWriter out = null;
-        BufferedReader in = null;
-        StringBuilder result = new StringBuilder();
+    private static String inputStreamTOString(InputStream in,String encoding) throws Exception{
 
-        try {
-            URLConnection conn = openConnection(url);
-            conn.setDoOutput(true);
-            conn.setDoInput(true);
-            out = new PrintWriter(conn.getOutputStream());
-            out.print(param);
-            out.flush();
-            in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-
-            String line;
-            while((line = in.readLine()) != null) {
-                result.append(line);
-            }
-        } catch (Exception var15) {
-            ;
-        } finally {
-            try {
-                if (out != null) {
-                    out.close();
-                }
-
-                if (in != null) {
-                    in.close();
-                }
-            } catch (IOException var14) {
-                ;
-            }
-
-        }
-
-        return result.toString();
+        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+        byte[] data = new byte[4096 * 4];
+        int count = -1;
+        while((count = in.read(data,0,4096 * 4)) != -1)
+            outStream.write(data, 0, count);
+        return new String(outStream.toByteArray(),encoding);
     }
 }

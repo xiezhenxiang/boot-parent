@@ -27,7 +27,10 @@ public class JerseyHttp {
 
     public JerseyHttp(JerseyClientProperties clientProperties) {
         ClientConfig clientConfig = new ClientConfig();
-        clientConfig.property("jersey.config.client.connectTimeout", clientProperties.getConnectTimeout()).property("jersey.config.client.readTimeout", clientProperties.getReadTimeout()).register(JacksonJsonProvider.class).register(MultiPartFeature.class);
+        clientConfig.property("jersey.config.client.connectTimeout", clientProperties.getConnectTimeout())
+                .property("jersey.config.client.readTimeout", clientProperties.getReadTimeout())
+                .register(JacksonJsonProvider.class)
+                .register(MultiPartFeature.class);
         this.client = JerseyClientBuilder.createClient(clientConfig);
         this.clientProperties = clientProperties;
     }

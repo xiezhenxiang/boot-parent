@@ -1,7 +1,9 @@
 package test;
 
 import indi.fly.boot.App;
+import indi.fly.boot.base.jersey.JerseyHttp;
 import indi.fly.boot.base.jwt.JwtToken;
+import indi.fly.boot.base.util.HttpUtils;
 import indi.fly.boot.base.util.MybatisGenUtil;
 import com.google.common.collect.Maps;
 import org.junit.Test;
@@ -18,10 +20,19 @@ public class GeMybatis {
 
     @Autowired
     JwtToken jwtToken;
+    @Autowired
+    JerseyHttp jerseyHttp;
 
     @Test
     public void geMybatis(){
         MybatisGenUtil.genMapperAndXml();
+    }
+
+    @Test
+    public void httpTest(){
+        String url = "https://www.facebook.com";
+        String str = HttpUtils.sendGet(url, "127.0.0.1", 1080);
+        System.out.println(str);
     }
 
     @Test
