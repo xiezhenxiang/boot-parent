@@ -11,24 +11,24 @@ class Constants {
     }
 
     private static final Log logger = LogFactory.getLog(Constants.class);
-    private static ResourcePropertySource resourcePropertySource;
+    private static ResourcePropertySource props;
 
     static {
         String[] fileDirs = new String[]{"demo.properties", "file:/work/conf/demo.properties"};
 
         for (int i = 0; i < fileDirs.length; i ++){
             try {
-                resourcePropertySource = new ResourcePropertySource(fileDirs[i]);
+                props = new ResourcePropertySource(fileDirs[i]);
             } catch (IOException e) {
                 continue;
             }
         }
-        if(resourcePropertySource == null)
+        if(props == null)
             logger.info("未加载到配置文件");
     }
 
     public static String getValue(String key) {
-        Object value = resourcePropertySource.getProperty(key);
+        Object value = props.getProperty(key);
         return value == null ? null : value.toString();
     }
     //public final static String ip = getValue("ip");
