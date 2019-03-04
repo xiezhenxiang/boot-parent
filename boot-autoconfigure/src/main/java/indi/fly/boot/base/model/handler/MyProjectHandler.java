@@ -1,7 +1,7 @@
 package indi.fly.boot.base.model.handler;
 import indi.fly.boot.base.util.JsonUtils;
 import com.google.gson.reflect.TypeToken;
-import org.apache.ibatis.type.BaseTypeHandler;
+/*import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 
 import java.sql.CallableStatement;
@@ -37,4 +37,4 @@ public class MyProjectHandler extends BaseTypeHandler<List<String>> {
         List<String> inputBean = JsonUtils.fromJson(str, new TypeToken<List<String>>(){}.getType());
         return inputBean;
     }
-}
+}*/

@@ -14,16 +14,16 @@ class Constants {
     private static ResourcePropertySource props;
 
     static {
-        String[] fileDirs = new String[]{"demo.properties", "file:/work/conf/demo.properties"};
+        String[] filePath= new String[]{"demo.properties", "file:/work/conf/demo.properties"};
 
-        for (int i = 0; i < fileDirs.length; i ++){
+        for (int i = 0; i < filePath.length; i ++){
             try {
-                props = new ResourcePropertySource(fileDirs[i]);
+                props = new ResourcePropertySource(filePath[i]);
             } catch (IOException e) {
                 continue;
             }
         }
-        if(props == null)
+        if (props == null)
             logger.info("未加载到配置文件");
     }
 

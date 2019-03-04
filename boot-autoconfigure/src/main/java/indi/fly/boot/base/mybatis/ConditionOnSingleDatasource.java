@@ -1,4 +1,4 @@
-package indi.fly.boot.base.jersey;
+package indi.fly.boot.base.mybatis;
 
 import org.springframework.context.annotation.Conditional;
 
@@ -9,6 +9,6 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
-@Conditional({OnSingleDatasourceCondition.class})
+@Conditional({MybatisScanAutoConfig.class})
 public @interface ConditionOnSingleDatasource {
 }

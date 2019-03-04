@@ -42,6 +42,11 @@
             <version>${jersey-swagger.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.auth0</groupId>
+            <artifactId>java-jwt</artifactId>
+        </dependency>
+
         <!-- Optional -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -55,7 +60,6 @@
             <version>${mybatis-spring-boot.version}</version>
             <optional>true</optional>
         </dependency>
-
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
@@ -67,11 +71,6 @@
             <artifactId>mybatis-generator-core</artifactId>
             <version>${mybatis-generator.version}</version>
             <optional>true</optional>
-        </dependency>
-
-        <dependency>
-            <groupId>com.auth0</groupId>
-            <artifactId>java-jwt</artifactId>
         </dependency>
 
         <dependency>
