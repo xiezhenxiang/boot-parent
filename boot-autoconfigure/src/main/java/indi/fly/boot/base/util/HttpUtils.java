@@ -1,6 +1,5 @@
 package indi.fly.boot.base.util;
 
-import javassist.util.proxy.ProxyFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,6 +14,7 @@ import java.util.Map;
 public final class HttpUtils {
 
     private static Logger logger = LoggerFactory.getLogger(HttpUtils.class);
+    private static final String code = "utf-8";
 
     public HttpUtils() {
     }
@@ -50,14 +50,14 @@ public final class HttpUtils {
             connection.connect();
             int responseCode = connection.getResponseCode();
             if (responseCode == 200) {
-                result = inputStreamTOString(connection.getInputStream(),"utf-8");
+                result = inputStreamTOString(connection.getInputStream(), code);
             }else{
-                logger.info(url);
-                logger.info("Http Get请求获取不到源码，响应码为：" + responseCode);
+                logger.info("url: {}", url);
+                logger.info("Http Get请求获取不到源码，响应码为：{}", responseCode);
             }
         } catch (Exception e) {
-            logger.info(url);
-            logger.info("Http Get请求获取源码异常：" + e.toString());
+            logger.info("url: {}", url);
+            logger.error("Http Get请求获取源码异常" + e);
         }
         return result;
     }
@@ -87,40 +87,38 @@ public final class HttpUtils {
 
             int responseCode = conn.getResponseCode();
             if (responseCode == 200) {
-                result = inputStreamTOString(conn.getInputStream(),"utf-8");
+                result = inputStreamTOString(conn.getInputStream(),code);
             }else {
-                logger.info(url);
-                logger.info("Http Post请求获取不到源码，响应码为：" + responseCode);
+                logger.info("url: {}", url);
+                logger.info("Http Post请求获取不到源码，响应码为：{}", responseCode);
             }
         } catch (Exception e) {
-            logger.info(url);
-            logger.info("Http Post请求获取源码异常：" + e.toString());
+            logger.info("url: {}", url);
+            logger.error("Http Post请求获取源码异常", e);
         }
         return result;
     }
 
 
     private static String parseParam(Map<String, String> param) {
-        List<String> list = new ArrayList();
+        List<String> list = new ArrayList<>();
         param.forEach((k, v) -> {
             list.add(k + "=" + v);
         });
         StringBuilder sb = new StringBuilder();
 
-        for(int i = 0; i < list.size(); ++i) {
+        for (int i = 0; i < list.size(); ++i) {
             if (i > 0) {
                 sb.append("&");
             }
-
             sb.append(list.get(i));
         }
-
         return sb.toString();
     }
 
     private static String dealGetParam(String url, Map<String, String> getParam) {
         String f = "?";
-        if (url.indexOf("?") != -1) {
+        if (url.contains("?")) {
             f = "&";
         }
 
@@ -130,7 +128,7 @@ public final class HttpUtils {
 
     private static String getHttpUrl(String str) {
         try {
-            str = URLEncoder.encode(str, "utf-8").replace("%3A", ":")
+            str = URLEncoder.encode(str, code).replace("%3A", ":")
                     .replaceAll("%2F", "/");
         }catch (Exception e){
             e.printStackTrace();
@@ -145,6 +143,6 @@ public final class HttpUtils {
         int count = -1;
         while((count = in.read(data,0,4096 * 4)) != -1)
             outStream.write(data, 0, count);
-        return new String(outStream.toByteArray(),encoding);
+        return new String(outStream.toByteArray(), encoding);
     }
 }

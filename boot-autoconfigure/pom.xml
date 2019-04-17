@@ -94,6 +94,12 @@
             <artifactId>elasticsearch</artifactId>
             <optional>true</optional>
         </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-mongodb</artifactId>
+            <optional>false</optional>
+        </dependency>
     </dependencies>
 
     <build>
