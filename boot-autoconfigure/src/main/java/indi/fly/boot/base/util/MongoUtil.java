@@ -25,19 +25,21 @@ class MongoUtil {
 
         if (client == null) {
             synchronized (MongoUtil.class){
-                try {
-                    MongoClientOptions options = MongoClientOptions.builder()
-                            .connectionsPerHost(20).minConnectionsPerHost(1)
-                            .maxConnectionIdleTime(30000).maxConnectionLifeTime(180000)
-                            .connectTimeout(30000).socketTimeout(120000).build();
-                    String[] urls = MONGODB_URL.split(",");
-                    List<ServerAddress> urlList = new ArrayList<>();
-                    for (String url : urls) {
-                        urlList.add(new ServerAddress(url, MONGODB_PORT));
+                if (client == null) {
+                    try {
+                        MongoClientOptions options = MongoClientOptions.builder()
+                                .connectionsPerHost(20).minConnectionsPerHost(1)
+                                .maxConnectionIdleTime(30000).maxConnectionLifeTime(180000)
+                                .connectTimeout(30000).socketTimeout(120000).build();
+                        String[] urls = MONGODB_URL.split(",");
+                        List<ServerAddress> urlList = new ArrayList<>();
+                        for (String url : urls) {
+                            urlList.add(new ServerAddress(url, MONGODB_PORT));
+                        }
+                        client = new MongoClient(urlList, options);
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                    client = new MongoClient(urlList, options);
-                } catch (Exception e) {
-                    e.printStackTrace();
                 }
             }
         }
