@@ -13,7 +13,7 @@ public class McnContextInitializer implements ApplicationContextInitializer {
 
     public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
         configurableApplicationContext.addApplicationListener((ContextRefreshedEvent event) -> {
-            (new BeanUtils()).setApplicationContext(event.getApplicationContext());
+            new BeanUtils().setApplicationContext(event.getApplicationContext());
         });
     }
 }

@@ -129,7 +129,9 @@ public final class HttpUtils {
     private static String getHttpUrl(String str) {
         try {
             str = URLEncoder.encode(str, code).replace("%3A", ":")
-                    .replaceAll("%2F", "/");
+                    .replaceAll("%2F", "/")
+                    .replaceAll("%3F", "?")
+                    .replaceAll("%3D", "=");
         }catch (Exception e){
             e.printStackTrace();
         }

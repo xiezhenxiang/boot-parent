@@ -1,12 +1,12 @@
 package indi.fly.boot.base.jersey;
 
+import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import com.google.common.collect.Sets;
 import indi.fly.boot.base.api.SwaggerView;
 import indi.fly.boot.base.exception.handler.BaseExceptionHandler;
 import indi.fly.boot.base.exception.handler.ExceptionHandler;
 import indi.fly.boot.base.exception.handler.ValidationExceptionMapper;
 import indi.fly.boot.base.exception.handler.WebApplicationExceptionHandler;
-import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
-import com.google.common.collect.Sets;
 import io.swagger.jaxrs.config.BeanConfig;
 import io.swagger.jaxrs.listing.ApiListingResource;
 import io.swagger.jaxrs.listing.SwaggerSerializers;
@@ -30,7 +30,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
-import javax.sql.DataSource;
 import javax.ws.rs.Path;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
@@ -50,11 +49,9 @@ import java.util.stream.Collectors;
 @AutoConfigureBefore({JerseyAutoConfiguration.class})
 public class JerseySwaggerAutoConfiguration extends ResourceConfig {
     private final JerseySwaggerProperties jersey;
-
     public JerseySwaggerAutoConfiguration(JerseySwaggerProperties jersey) {
         this.jersey = jersey;
     }
-
 
     @Bean
     public ResourceConfigCustomizer resourceRegister() {
