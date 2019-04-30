@@ -31,7 +31,7 @@ public class GeMybatis {
     @Test
     public void httpTest(){
         String url = "https://www.facebook.com";
-        String str = HttpUtils.sendGet(url, "127.0.0.1", 1080);
+        String str = HttpUtils.sendGet(url, "127.0.0.1:1080");
         System.out.println(str);
     }
 
