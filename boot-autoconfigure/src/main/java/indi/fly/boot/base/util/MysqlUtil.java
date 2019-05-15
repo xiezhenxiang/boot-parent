@@ -10,7 +10,7 @@ class MysqlUtil {
 
     private static final String USERNAME = "root";
     private static final String PASSWORD = "root";
-    private static final String URL = "jdbc:mysql://127.0.0.1:3306/mysql?characterEncoding=utf8&autoReconnect=true&failOverReadOnly=false&useSSL=false";
+    private static final String URL = "jdbc:mysql://127.0.0.1:3306/mysql?characterEncoding=utf8&autoReconnect=true&useSSL=false";
     private volatile static Connection con = null;
 
     private static Connection getConnection() {

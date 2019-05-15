@@ -1,5 +1,6 @@
 package indi.fly.boot.base.model.constant;
 
+import indi.fly.boot.base.util.ClassUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.core.io.support.ResourcePropertySource;
@@ -14,13 +15,14 @@ class Constants {
     private static ResourcePropertySource props;
 
     static {
-        String[] filePath= new String[]{"demo.properties", "file:/work/conf/demo.properties"};
+        String prodPath = ClassUtil.getProjectDir() + "/conf/demo.properties";
+        String[] filePath= new String[]{"demo.properties", prodPath};
 
-        for (int i = 0; i < filePath.length; i ++){
+        for (String path : filePath){
             try {
-                props = new ResourcePropertySource(filePath[i]);
+                props = new ResourcePropertySource(path);
             } catch (IOException e) {
-                continue;
+                // todo
             }
         }
         if (props == null)
@@ -31,5 +33,4 @@ class Constants {
         Object value = props.getProperty(key);
         return value == null ? null : value.toString();
     }
-    //public final static String ip = getValue("ip");
 }
