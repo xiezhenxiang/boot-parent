@@ -1,7 +1,6 @@
 package indi.fly.boot.base.api;
 
 import indi.fly.boot.base.jersey.JerseySwaggerProperties;
-import indi.fly.boot.base.util.CommonHelper;
 import org.glassfish.jersey.server.mvc.Template;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -30,14 +29,15 @@ public class SwaggerView {
     )
     public Map<String, Object> indexView() {
 
-        Map<String, Object> map = new HashMap();
+        Map<String, Object> map = new HashMap<>();
         if (Objects.nonNull(this.jerseySwaggerProperties.getHost())) {
             map.put("host", this.jerseySwaggerProperties.getHost());
         } else {
             map.put("host", this.jerseySwaggerProperties.getIp() + ":" + this.jerseySwaggerProperties.getPort());
         }
-
-        map.put("path", CommonHelper.parsePath(this.jerseySwaggerProperties.getBasePath()));
+        String path = this.jerseySwaggerProperties.getBasePath();
+        path = path.startsWith("/") ? path : "/" + path;
+        map.put("path", path);
         map.put("cdn", this.jerseySwaggerProperties.getCdn());
         return map;
     }

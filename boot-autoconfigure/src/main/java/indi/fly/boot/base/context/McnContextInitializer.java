@@ -1,6 +1,6 @@
 package indi.fly.boot.base.context;
 
-import indi.fly.boot.base.util.BeanUtils;
+import indi.fly.boot.base.util.BeanUtil;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -13,7 +13,7 @@ public class McnContextInitializer implements ApplicationContextInitializer {
 
     public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
         configurableApplicationContext.addApplicationListener((ContextRefreshedEvent event) -> {
-            new BeanUtils().setApplicationContext(event.getApplicationContext());
+            new BeanUtil().setApplicationContext(event.getApplicationContext());
         });
     }
 }

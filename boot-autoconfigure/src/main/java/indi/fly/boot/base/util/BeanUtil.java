@@ -4,10 +4,10 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
-public class BeanUtils implements ApplicationContextAware {
+public class BeanUtil implements ApplicationContextAware {
     private static ApplicationContext ac;
 
-    public BeanUtils() {
+    public BeanUtil() {
     }
 
     public static Object getBean(String name) {

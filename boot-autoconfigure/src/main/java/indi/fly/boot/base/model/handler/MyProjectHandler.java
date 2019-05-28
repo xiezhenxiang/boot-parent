@@ -1,6 +1,4 @@
 package indi.fly.boot.base.model.handler;
-import indi.fly.boot.base.util.JsonUtils;
-import com.google.gson.reflect.TypeToken;
 /*import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 

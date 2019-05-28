@@ -13,7 +13,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PoiUtils {
+public class PoiUtil {
     public static List<List<String>> importXls(InputStream fileIn, String name) {
         return importXls(fileIn, name, 0);
     }
@@ -92,7 +92,7 @@ public class PoiUtils {
                     } else {
                         //数字
                         double dob = cell.getNumericCellValue();
-                        if (CheckType.whitDecimalPointIntCheck(dob)) {
+                        if (TypeCheckUtil.whitDecimalPointIntCheck(dob)) {
                             cellValue = (int) dob + "";
                         } else {
                             cellValue = String.valueOf(dob);

@@ -13,23 +13,6 @@ class MysqlUtil {
     private static final String URL = "jdbc:mysql://127.0.0.1:3306/mysql?characterEncoding=utf8&autoReconnect=true&useSSL=false";
     private volatile static Connection con = null;
 
-    private static Connection getConnection() {
-        if (con == null) {
-            synchronized (MysqlUtil.class){
-                if (con == null) {
-                    try {
-                        Class.forName("com.mysql.cj.jdbc.Driver");
-                        con = DriverManager.getConnection(URL, USERNAME, PASSWORD);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-        return con;
-    }
-
-
     /**
      * @desc 增删改
      * @author xiezhenxiang 2019/5/14
@@ -83,5 +66,22 @@ class MysqlUtil {
             e.printStackTrace();
         }
         return arr;
+    }
+
+
+    private static Connection getConnection() {
+        if (con == null) {
+            synchronized (MysqlUtil.class){
+                if (con == null) {
+                    try {
+                        Class.forName("com.mysql.cj.jdbc.Driver");
+                        con = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+        return con;
     }
 }

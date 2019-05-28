@@ -1,5 +1,6 @@
 package indi.fly.boot.base.util;
 
+import com.alibaba.fastjson.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,19 +13,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public final class HttpUtils {
+/**
+ * @desc Http请求工具
+ * @author xiezhenxiang 2019/4/12
+ **/
+public final class HttpUtil {
 
-    private static Logger logger = LoggerFactory.getLogger(HttpUtils.class);
+    private static Logger logger = LoggerFactory.getLogger(HttpUtil.class);
     private static final String ENCODE = "utf-8";
     private static final String FORM_CONTENT_TYPE = "application/x-www-form-urlencoded;charset=utf-8";
     private static final String JSON_CONTENT_TYPE = "application/json;charset=utf-8";
-    public HttpUtils() {
+    public HttpUtil() {
     }
 
     private static HttpURLConnection openConnection(String url, String proxyHost) throws IOException {
         URL realUrl = new URL(url);
         URLConnection conn;
-        if(StringUtils.check(proxyHost)){
+        if(StringUtil.verify(proxyHost)){
             String proxyIp = proxyHost.substring(0, proxyHost.lastIndexOf(":"));
             int proxyPort = Integer.valueOf(proxyHost.substring(proxyHost.lastIndexOf(":") + 1));
             InetSocketAddress proxyAddr = new InetSocketAddress(proxyIp, proxyPort);
@@ -33,9 +38,9 @@ public final class HttpUtils {
         }else{
             conn = realUrl.openConnection();
         }
-        conn.setRequestProperty("accept", "*/*");
-        conn.setRequestProperty("connection", "Keep-Alive");
-        conn.setRequestProperty("user-agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1;SV1)");
+        conn.setRequestProperty("Accept", "*/*");
+        conn.setRequestProperty("Connection", "Keep-Alive");
+        conn.setRequestProperty("User-Agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1;SV1)");
         conn.setConnectTimeout(8 * 1000);
         conn.setReadTimeout(10 * 1000);
         conn.setDoInput(true);
@@ -64,6 +69,8 @@ public final class HttpUtils {
             }else{
                 logger.info("url: {}", url);
                 logger.info("Http Get请求无结果，响应码为：{}", responseCode);
+
+                System.out.println(JSONObject.toJSON(connection.getHeaderFields()).toString());
             }
         } catch (Exception e) {
             logger.info("url: {}", url);

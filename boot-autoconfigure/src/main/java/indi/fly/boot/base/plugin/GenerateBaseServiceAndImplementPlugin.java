@@ -91,7 +91,7 @@ public class GenerateBaseServiceAndImplementPlugin extends PluginAdapter {
             restClass.addImportedType("indi.fly.boot.base.model.result.*");
             restClass.addImportedType("indi.fly.boot.base.model.search.*");
             restClass.addImportedType("indi.fly.boot.base.util.*");
-            restClass.addImportedType("indi.fly.boot.base.util.JsonUtils");
+            restClass.addImportedType("indi.fly.boot.base.util.JsonUtil");
             restClass.addImportedType("com.google.gson.reflect.TypeToken");
             restClass.addImportedType("java.util.List");
             restClass.addImportedType("javax.validation.Valid");
@@ -162,8 +162,8 @@ public class GenerateBaseServiceAndImplementPlugin extends PluginAdapter {
         parameter = new Parameter(new FullyQualifiedJavaType("@Valid @BeanParam PageModel"), "pageModel");
         listByPage.getParameters().add(parameter);
         listByPage.getBodyLines().add("");
-        listByPage.getBodyLines().add("List<QueryCondition> qcList = JsonUtils.fromJson(queryCondition, new TypeToken<List<QueryCondition>>() {}.getType());");
-        listByPage.getBodyLines().add("List<QueryCondition> qoList = JsonUtils.fromJson(queryOrder, new TypeToken<List<QueryOrder>>() {}.getType());\n");
+        listByPage.getBodyLines().add("List<QueryCondition> qcList = JsonUtil.fromJson(queryCondition, new TypeToken<List<QueryCondition>>() {}.getType());");
+        listByPage.getBodyLines().add("List<QueryCondition> qoList = JsonUtil.fromJson(queryOrder, new TypeToken<List<QueryOrder>>() {}.getType());\n");
         listByPage.getBodyLines().add("RestData rs = " + xService + ".list(qcList, qoList, pageModel);");
 
         listByPage.getBodyLines().add("return new RestResp<>(rs);");
@@ -187,8 +187,7 @@ public class GenerateBaseServiceAndImplementPlugin extends PluginAdapter {
         add.setReturnType(new FullyQualifiedJavaType("RestResp<" + introspectedTable.getFullyQualifiedTable().getDomainObjectName() + ">"));
         parameter = new Parameter(new FullyQualifiedJavaType("@ApiParam(required = true)@FormParam(\"bean\") String"), "bean");
         add.getParameters().add(parameter);
-        add.getBodyLines().add("" + Bean + " " + bean + " = JsonUtils.fromJson(bean, " + Bean + ".class);");
-        add.getBodyLines().add("BeanValidator.validate(" + bean + ");");
+        add.getBodyLines().add("" + Bean + " " + bean + " = JsonUtil.fromJson(bean, " + Bean + ".class);");
         add.getBodyLines().add("" + xService + ".saveSelective(" + bean + ");");
         add.getBodyLines().add("return new RestResp<>(" + bean + ");");
         restClass.getMethods().add(add);
@@ -213,9 +212,8 @@ public class GenerateBaseServiceAndImplementPlugin extends PluginAdapter {
         update.getParameters().add(parameter);
         parameter = new Parameter(new FullyQualifiedJavaType("@ApiParam(required = true)@FormParam(\"bean\") String"), "bean");
         update.getParameters().add(parameter);
-        update.getBodyLines().add("" + Bean + " " + bean + " = JsonUtils.fromJson(bean, " + Bean + ".class);");
+        update.getBodyLines().add("" + Bean + " " + bean + " = JsonUtil.fromJson(bean, " + Bean + ".class);");
         update.getBodyLines().add("" + bean + ".setId(id);");
-        update.getBodyLines().add("BeanValidator.validate(" + bean + ");");
         update.getBodyLines().add("" + xService + ".updateByPrimaryKeySelective(" + bean + ");");
         update.getBodyLines().add("return new RestResp<>();");
         restClass.getMethods().add(update);

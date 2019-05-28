@@ -14,7 +14,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-class EsRestClient {
+class EsRestUtil {
 	
 	private static final String PUT = "PUT";
 	private static final String POST = "POST";

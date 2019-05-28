@@ -7,11 +7,11 @@ import org.springframework.context.annotation.Configuration;
 import java.lang.reflect.Type;
 
 @Configuration
-public class JsonUtils {
+public class JsonUtil {
 
 	private static Gson gson = new Gson();
 
-	public JsonUtils() {
+	public JsonUtil() {
 	}
 
 	public static <T> T fromJson(String json, Class<T> cls) {

@@ -3,7 +3,7 @@ package indi.fly.boot.base.exception.handler;
 import indi.fly.boot.base.exception.BaseException;
 import indi.fly.boot.base.jersey.JerseySwaggerProperties;
 import indi.fly.boot.base.model.result.RestResp;
-import indi.fly.boot.base.util.BeanUtils;
+import indi.fly.boot.base.util.BeanUtil;
 import com.google.common.collect.Lists;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 
 public final class BaseExceptionHandler implements ExceptionMapper<BaseException> {
     private static final Log logger = LogFactory.getLog(BaseExceptionHandler.class);
-    private String basePackage =  BeanUtils.getBean(JerseySwaggerProperties.class).getBasePackage();
+    private String basePackage =  BeanUtil.getBean(JerseySwaggerProperties.class).getBasePackage();
 
     public BaseExceptionHandler() {
     }

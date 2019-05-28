@@ -3,17 +3,9 @@ package indi.fly.boot.base.util;
 import java.util.regex.Pattern;
 
 /**
- * 类型判断
+ * 对象类型判断
  */
-public class CheckType {
-
-    public static boolean haveTest(Object str) {
-        if (str == null)
-            return false;
-        if (str instanceof String)
-            return !StringUtils.isNullOrEmpty(str.toString());
-        return true;
-    }
+public class TypeCheckUtil {
 
     public static boolean IntCheck(Object str) {
         if (str == null)
