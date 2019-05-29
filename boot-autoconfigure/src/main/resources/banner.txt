@@ -7,4 +7,4 @@ U | __")u    \/"_ \/    \/"_ \/|_ " _|
  _|| \\_       \\         \\   _// \\_
 (__) (__)     (__)       (__) (__) (__)
 ${AnsiColor.BRIGHT_GREEN} :: Spring Boot :: ${AnsiColor.DEFAULT}   ${AnsiColor.BRIGHT_MAGENTA}${spring-boot.formatted-version}
-${AnsiColor.BRIGHT_GREEN} :: Fly    Boot :: ${AnsiColor.DEFAULT}    ${AnsiColor.BRIGHT_MAGENTA}(v${fly.version}.RELEASE)${AnsiColor.DEFAULT}
+${AnsiColor.BRIGHT_GREEN} :: Shine  Boot :: ${AnsiColor.DEFAULT}    ${AnsiColor.BRIGHT_MAGENTA}(v${shine.version}.RELEASE)${AnsiColor.DEFAULT}

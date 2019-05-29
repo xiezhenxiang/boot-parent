@@ -12,9 +12,9 @@
 
         <!-- 这个插件给由MBG生成的Java模型对象增加了equals和hashCode方法 -->
         <!--<plugin type="org.mybatis.generator.plugins.EqualsHashCodePlugin"/>-->
-        <plugin type="indi.fly.boot.base.plugin.GenerateBaseMapperAndPagePlugin"/>
-        <plugin type="indi.fly.boot.base.plugin.GenerateBaseServiceAndImplementPlugin">
-            <property name="rootInterface" value="indi.fly.boot.base.model.BaseService"/>
+        <plugin type="indi.shine.boot.base.plugin.GenerateBaseMapperAndPagePlugin"/>
+        <plugin type="indi.shine.boot.base.plugin.GenerateBaseServiceAndImplementPlugin">
+            <property name="rootInterface" value="indi.shine.boot.base.model.BaseService"/>
             <property name="service" value="org.springframework.stereotype.Service"/>
             <property name="targetProject" value="src/main/java"/>
             <property name="targetPackage" value="${service-package}"/>
@@ -45,7 +45,7 @@
             <property name="enableSubPackages" value="true"/>
             <!-- 设置是否在getter方法中，对String类型字段调用trim()方法 -->
             <property name="trimStrings" value="false"/>
-            <property name="rootClass" value="indi.fly.boot.base.model.BaseModel"/>
+            <property name="rootClass" value="indi.shine.boot.base.model.BaseModel"/>
         </javaModelGenerator>
         <!--对应的xml mapper文件  -->
         <sqlMapGenerator targetPackage="mapper" targetProject="src/main/resources">
@@ -54,7 +54,7 @@
         <!-- 对应的dao接口 -->
         <javaClientGenerator type="XMLMAPPER" targetPackage="${dao-package}" targetProject="src/main/java">
             <property name="enableSubPackages" value="true"/>
-            <property name="rootInterface" value="indi.fly.boot.base.model.BaseMapper"/>
+            <property name="rootInterface" value="indi.shine.boot.base.model.BaseMapper"/>
             <property name="repository" value="org.springframework.stereotype.Repository"/>
         </javaClientGenerator>
 
