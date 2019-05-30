@@ -2,9 +2,11 @@ package indi.shine.boot.base.util;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.collect.Lists;
 
 import java.sql.*;
 import java.util.List;
+import java.util.Map;
 
 class MysqlUtil {
 
@@ -19,19 +21,23 @@ class MysqlUtil {
      * @param sql sql语句
      * @param params 参数
      **/
-    public static boolean executeUpdate(String sql, List<Object> params)
-            throws SQLException {
-        Connection conn = getConnection();
+    public static boolean executeUpdate(String sql, List<Object> params) {
+        getConnection();
         PreparedStatement statement;
-        statement = conn.prepareStatement(sql);
-        if (params != null && !params.isEmpty()) {
+        int result = 0;
+        try {
+            statement = con.prepareStatement(sql);
             int index = 1;
-            for (int i = 0; i < params.size(); i++) {
-                statement.setObject(index ++, i);
+            if (params != null && !params.isEmpty()) {
+                for (Object para : params) {
+                    statement.setObject(index++, para);
+                }
             }
+            // update lines num
+            result = statement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-        // 影响数据库的行数
-        int result = statement.executeUpdate();
         return result > 0;
     }
 
@@ -39,12 +45,12 @@ class MysqlUtil {
      * 从数据库中查询数据
      */
     public static JSONArray executeQuery(String sql, List<Object> params){
-        Connection conn = getConnection();
+        getConnection();
         JSONArray arr = new JSONArray();
         PreparedStatement statement;
         try {
             int index = 1;
-            statement = conn.prepareStatement(sql);
+            statement = con.prepareStatement(sql);
             if (params != null && !params.isEmpty()) {
                 for (Object para : params) {
                     statement.setObject(index ++, para);
@@ -66,6 +72,28 @@ class MysqlUtil {
             e.printStackTrace();
         }
         return arr;
+    }
+
+    public static boolean insertSelective(String tbName, JSONObject bean) {
+        String sql = "insert into " + tbName + " (";
+        List<Object> values = Lists.newArrayList();
+        for (Map.Entry<String, Object> entry : bean.entrySet()) {
+            if (entry.getValue() != null) {
+                sql += entry.getKey() + ", ";
+                values.add(entry.getValue());
+            }
+        }
+        if (!values.isEmpty()) {
+            sql = sql.substring(0, sql.length() - 2) + ") values (";
+            for (int i = 0; i < values.size(); i ++) {
+                sql += "?, ";
+            }
+            sql = sql.substring(0, sql.length() - 2) + ")";
+        } else {
+            return true;
+        }
+        executeUpdate(sql, values);
+        return true;
     }
 
 

@@ -21,51 +21,51 @@ import java.util.stream.Collectors;
  */
 class MongoUtil {
 
-    private static MongoClient mongoClient;
-
     private static final String MONGODB_URL = "127.0.0.1";
     private static final int MONGODB_PORT = 27017;
     private volatile static MongoClient client = null;
 
     public static void insertMany(String database, String collection, List<Document> documentList) {
-        MongoClient mongoClient = null;
+        getMongoClient();
+        if (documentList == null || documentList.isEmpty()) {
+            return;
+        }
         try {
-            mongoClient = getMongoClient();
-            mongoClient.getDatabase(database).getCollection(collection).insertMany(documentList);
+            client.getDatabase(database).getCollection(collection).insertMany(documentList);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     public static void insertOne(String database, String collection, Document doc) {
+        getMongoClient();
         try {
-            mongoClient = getMongoClient();
-            mongoClient.getDatabase(database).getCollection(collection).insertOne(doc);
+            client.getDatabase(database).getCollection(collection).insertOne(doc);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     public static void updateOne(String database, String collection, Document query, Document doc) {
+        getMongoClient();
         try {
-            mongoClient = getMongoClient();
-            mongoClient.getDatabase(database).getCollection(collection).updateOne(query, new Document("$set", doc));
+            client.getDatabase(database).getCollection(collection).updateOne(query, new Document("$set", doc));
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     public static void upsertOne(String database, String collection, Document query, Document doc) {
-        MongoClient mongoClient = null;
+        getMongoClient();
         try {
-            mongoClient = getMongoClient();
-            mongoClient.getDatabase(database).getCollection(collection).updateOne(query, doc, new UpdateOptions().upsert(true));
+            client.getDatabase(database).getCollection(collection).updateOne(query, doc, new UpdateOptions().upsert(true));
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     public static void upsertManey(String database, String collection, List<Document> ls, List<String> fields) {
+        getMongoClient();
         List<UpdateOneModel<Document>> requests = ls.stream().map(s -> new UpdateOneModel<Document>(
             new Bson() {
                 @Override
@@ -84,9 +84,9 @@ class MongoUtil {
     }
 
     public static void updateMany(String database, String collection, Document query, Document doc) {
+        getMongoClient();
         try {
-            mongoClient = getMongoClient();
-            mongoClient.getDatabase(database).getCollection(collection).updateMany(query, new Document("$set", doc));
+            client.getDatabase(database).getCollection(collection).updateMany(query, new Document("$set", doc));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -101,12 +101,12 @@ class MongoUtil {
     }
 
     public static MongoCursor<Document> find(String db, String col, Document query, Document sort, Integer pageNo, Integer pageSize) {
+        getMongoClient();
         MongoCursor<Document> mongoCursor = null;
         query = query == null ? new Document() : query;
         sort = sort == null ? new Document() : sort;
         try {
-            mongoClient = getMongoClient();
-            FindIterable<Document> findIterable = mongoClient.getDatabase(db).getCollection(col).find(query).sort(sort);
+            FindIterable<Document> findIterable = client.getDatabase(db).getCollection(col).find(query).sort(sort);
             if(pageNo != null)  findIterable.skip(pageNo);
             if(pageSize != null)    findIterable.limit(pageSize);
             mongoCursor = findIterable.noCursorTimeout(true).iterator();
@@ -117,10 +117,9 @@ class MongoUtil {
     }
 
     public static void delete(String db, String col, Document query){
-        MongoClient mongoClient = null;
+        getMongoClient();
         try {
-            mongoClient = getMongoClient();
-            mongoClient.getDatabase(db).getCollection(col).deleteMany(query);
+            client.getDatabase(db).getCollection(col).deleteMany(query);
         } catch (Exception e) {
             e.printStackTrace();
         }
