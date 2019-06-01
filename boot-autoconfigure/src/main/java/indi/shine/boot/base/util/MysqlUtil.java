@@ -12,7 +12,7 @@ class MysqlUtil {
 
     private static final String USERNAME = "root";
     private static final String PASSWORD = "root";
-    private static final String URL = "jdbc:mysql://127.0.0.1:3306/mysql?characterEncoding=utf8&autoReconnect=true&useSSL=false";
+    private static final String URL = "jdbc:mysql://127.0.0.1:3306/mysql?serverTimezone=UTC&characterEncoding=utf8&autoReconnect=true&useSSL=false";
     private volatile static Connection con = null;
 
     /**
@@ -42,8 +42,11 @@ class MysqlUtil {
     }
 
     /**
-     * 从数据库中查询数据
-     */
+     * @desc 查找
+     * @author xiezhenxiang 2019/5/14
+     * @param sql sql语句
+     * @param params 参数
+     **/
     public static JSONArray executeQuery(String sql, List<Object> params){
         getConnection();
         JSONArray arr = new JSONArray();
@@ -74,6 +77,12 @@ class MysqlUtil {
         return arr;
     }
 
+    /**
+     * @desc 插入数据
+     * @author xiezhenxiang 2019/6/1
+     * @param tbName 表名
+     * @param bean 数据
+     **/
     public static boolean insertSelective(String tbName, JSONObject bean) {
         String sql = "insert into " + tbName + " (";
         List<Object> values = Lists.newArrayList();

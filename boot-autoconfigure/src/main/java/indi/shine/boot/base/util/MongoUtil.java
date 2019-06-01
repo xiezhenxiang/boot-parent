@@ -1,10 +1,12 @@
 package indi.shine.boot.base.util;
 
+import com.google.common.collect.Lists;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCursor;
+import com.mongodb.client.model.IndexModel;
 import com.mongodb.client.model.UpdateOneModel;
 import com.mongodb.client.model.UpdateOptions;
 import org.bson.BsonDocument;
@@ -15,6 +17,8 @@ import org.bson.conversions.Bson;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 /**
  * @author xiezhenxiang 2019/4/17
@@ -137,6 +141,22 @@ class MongoUtil {
         return count;
     }
 
+    public static List<Document> getIndex(String db, String col) {
+        getMongoClient();
+        List<Document> indexs = Lists.newArrayList();
+        MongoCursor<Document> cursor = client.getDatabase(db).getCollection(col).listIndexes().iterator();
+        cursor.forEachRemaining(s -> indexs.add((Document) s.get("key")));
+        return indexs;
+    }
+
+    public static void createIndex(String db, String col, List<Document> index) {
+        if (index.isEmpty())
+            return;
+        getMongoClient();
+        List<IndexModel> ls = index.stream().map(IndexModel::new).collect(toList());
+        client.getDatabase(db).getCollection(col).createIndexes(ls);
+    }
+
     public static MongoClient getMongoClient() {
 
         if (client == null) {
@@ -145,7 +165,7 @@ class MongoUtil {
                     try {
                         MongoClientOptions options = MongoClientOptions.builder()
                                 .connectionsPerHost(20).minConnectionsPerHost(1)
-                                .maxConnectionIdleTime(30000).maxConnectionLifeTime(180000)
+                                .maxConnectionIdleTime(0).maxConnectionLifeTime(0)
                                 .connectTimeout(30000).socketTimeout(120000).build();
                         String[] urls = MONGODB_URL.split(",");
                         List<ServerAddress> urlList = new ArrayList<>();

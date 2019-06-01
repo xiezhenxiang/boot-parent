@@ -2,16 +2,14 @@ package indi.shine.boot.base.util;
 
 import indi.shine.boot.base.exception.JsonException;
 import com.google.gson.Gson;
-import org.springframework.context.annotation.Configuration;
 
 import java.lang.reflect.Type;
 
-@Configuration
-public class JsonUtil {
+public class JSONUtil {
 
 	private static Gson gson = new Gson();
 
-	public JsonUtil() {
+	public JSONUtil() {
 	}
 
 	public static <T> T fromJson(String json, Class<T> cls) {

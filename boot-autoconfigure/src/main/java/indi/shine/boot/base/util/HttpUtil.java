@@ -169,7 +169,7 @@ public final class HttpUtil {
 
         ByteArrayOutputStream outStream = new ByteArrayOutputStream();
         byte[] data = new byte[4096 * 4];
-        int count = -1;
+        int count;
         while((count = in.read(data,0,4096 * 4)) != -1)
             outStream.write(data, 0, count);
         return new String(outStream.toByteArray(), encoding);
