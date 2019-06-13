@@ -8,60 +8,60 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class RestResp<T> {
 
     @JsonProperty("ActionStatus")
-    private String ActionStatus;
+    private String actionStatus;
     @JsonProperty("ErrorCode")
-    private Integer ErrorCode;
+    private Integer errorCode;
     @JsonProperty("ErrorInfo")
-    private String ErrorInfo;
+    private String errorInfo;
     private T data;
 
     public RestResp() {
-        this.ActionStatus = ActionStatusMethod.OK.toString();
-        this.ErrorCode = Integer.valueOf(0);
-        this.ErrorInfo = "";
+        this.actionStatus = ActionStatusMethod.OK.toString();
+        this.errorCode = 0;
+        this.errorInfo = "";
     }
 
     public RestResp(Integer code, String msg) {
-        this.ActionStatus = ActionStatusMethod.OK.toString();
-        this.ErrorCode = Integer.valueOf(0);
-        this.ErrorInfo = "";
-        this.ActionStatus = ActionStatusMethod.FAIL.toString();
-        this.ErrorCode = code;
-        this.ErrorInfo = msg;
+        this.actionStatus = ActionStatusMethod.OK.toString();
+        this.errorCode = 0;
+        this.errorInfo = "";
+        this.actionStatus = ActionStatusMethod.FAIL.toString();
+        this.errorCode = code;
+        this.errorInfo = msg;
     }
 
     public RestResp(T data) {
-        this.ActionStatus = ActionStatusMethod.OK.toString();
-        this.ErrorCode = Integer.valueOf(0);
-        this.ErrorInfo = "";
+        this.actionStatus = ActionStatusMethod.OK.toString();
+        this.errorCode = 0;
+        this.errorInfo = "";
         this.data = data;
     }
 
     @JsonIgnore
     public String getActionStatus() {
-        return this.ActionStatus;
+        return this.actionStatus;
     }
 
     public void setActionStatus(String actionStatus) {
-        this.ActionStatus = actionStatus;
+        this.actionStatus = actionStatus;
     }
 
     @JsonIgnore
     public Integer getErrorCode() {
-        return this.ErrorCode;
+        return this.errorCode;
     }
 
     public void setErrorCode(Integer errorCode) {
-        this.ErrorCode = errorCode;
+        this.errorCode = errorCode;
     }
 
     @JsonIgnore
     public String getErrorInfo() {
-        return this.ErrorInfo;
+        return this.errorInfo;
     }
 
     public void setErrorInfo(String errorInfo) {
-        this.ErrorInfo = errorInfo;
+        this.errorInfo = errorInfo;
     }
 
     public T getData() {
@@ -72,16 +72,18 @@ public class RestResp<T> {
         this.data = data;
     }
 
-    public static enum ActionStatusMethod {
+    public enum ActionStatusMethod {
+        // 成功
         OK("OK"),
+        // 失败
         FAIL("FAIL");
 
         private final String name;
 
-        private ActionStatusMethod(String name) {
+        ActionStatusMethod(String name) {
             this.name = name;
         }
-
+        @Override
         public String toString() {
             return this.name;
         }

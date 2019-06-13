@@ -8,6 +8,7 @@ import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -21,7 +22,8 @@ import java.util.Map;
 import java.util.Objects;
 
 public class JwtToken {
-    private static JwtProperties jwtProperties;
+    @Autowired
+    private JwtProperties jwtProperties;
     private HttpServletRequest request;
     private HttpServletResponse response;
 
@@ -39,14 +41,14 @@ public class JwtToken {
     public String createToken(Object identifier) {
         Map<String, Object> data = Maps.newHashMap();
         data.put("userId", identifier);
-        return this.createToken((Map)data);
+        return this.createToken(data);
     }
 
     public String createToken(Map<String, Object> data) {
         if (!Objects.isNull(data) && !data.isEmpty()) {
             Date iaDate = new Date();
             Calendar nowTime = Calendar.getInstance();
-            nowTime.add(5, this.jwtProperties.getExpireDate().intValue());
+            nowTime.add(Calendar.DATE, jwtProperties.getExpireDate());
             Date expireDate = nowTime.getTime();
             Map<String, Object> map = Maps.newHashMap();
             map.put("alg", "HS256");
@@ -64,13 +66,13 @@ public class JwtToken {
     private void convertDataToActualType(Map<String, Object> data, Builder builder) {
         data.forEach((k, v) -> {
             if (v instanceof Integer) {
-                builder.withClaim(k, ((Integer)v).intValue());
+                builder.withClaim(k, (Integer)v);
             } else if (v instanceof Double) {
-                builder.withClaim(k, ((Double)v).doubleValue());
+                builder.withClaim(k, (Double)v);
             } else if (v instanceof Date) {
                 builder.withClaim(k, (Date)v);
             } else if (v instanceof Boolean) {
-                builder.withClaim(k, ((Boolean)v).booleanValue());
+                builder.withClaim(k, (Boolean)v);
             } else {
                 builder.withClaim(k, v.toString());
             }
@@ -80,7 +82,7 @@ public class JwtToken {
 
     private String checkIsCreateNewToken(DecodedJWT jwt) {
         Date issuedAt = jwt.getIssuedAt();
-        if (System.currentTimeMillis() - issuedAt.getTime() > this.jwtProperties.getRefreshInterval().longValue() * 24L * 60L * 60L * 1000L) {
+        if (System.currentTimeMillis() - issuedAt.getTime() > jwtProperties.getRefreshInterval() * 24L * 60L * 60L * 1000L) {
             Map<String, Claim> claims = jwt.getClaims();
             Map<String, Object> data = Maps.newHashMap();
             claims.forEach((k, v) -> {
@@ -89,7 +91,7 @@ public class JwtToken {
                 }
 
             });
-            return this.createToken((Map)data);
+            return this.createToken(data);
         } else {
             return null;
         }

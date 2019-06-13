@@ -5,6 +5,7 @@ import java.util.List;
 public class QueryCondition {
 
 	public enum RELATION {
+		// 或
 		OR("or"),
 		AND("and");
 		private final String name;
@@ -17,6 +18,7 @@ public class QueryCondition {
 		}
 	}
 	public enum CONDITION {
+		// 等于
 		EQ("eq"),
 		GT("gt"),
 		GTE("gte"),

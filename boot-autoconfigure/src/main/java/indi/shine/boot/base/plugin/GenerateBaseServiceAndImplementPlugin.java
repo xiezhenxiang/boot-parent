@@ -22,16 +22,18 @@ public class GenerateBaseServiceAndImplementPlugin extends PluginAdapter {
     public GenerateBaseServiceAndImplementPlugin() {
     }
 
+    @Override
     public boolean validate(List<String> warnings) {
         this.serviceTargetDir = this.properties.getProperty("targetProject");
         this.serviceTargetPackage = this.properties.getProperty("targetPackage");
         this.service = this.properties.getProperty("service");
-        this.overwrite = Boolean.valueOf(this.properties.getProperty("overwrite")).booleanValue();
+        this.overwrite = Boolean.valueOf(this.properties.getProperty("overwrite"));
         return StringUtility.stringHasValue(this.serviceTargetDir) && StringUtility.stringHasValue(this.serviceTargetPackage) && StringUtility.stringHasValue(this.service);
     }
 
+    @Override
     public List<GeneratedJavaFile> contextGenerateAdditionalJavaFiles(IntrospectedTable introspectedTable) {
-        List<GeneratedJavaFile> javaFiles = new ArrayList();
+        List<GeneratedJavaFile> javaFiles = new ArrayList<>();
         Iterator var3 = introspectedTable.getGeneratedJavaFiles().iterator();
 
         while(true) {
@@ -134,6 +136,7 @@ public class GenerateBaseServiceAndImplementPlugin extends PluginAdapter {
 
     }
 
+    @Override
     public boolean sqlMapGenerated(GeneratedXmlFile sqlMap, IntrospectedTable introspectedTable) {
         try {
             java.lang.reflect.Field field = sqlMap.getClass().getDeclaredField("isMergeable");
@@ -148,7 +151,7 @@ public class GenerateBaseServiceAndImplementPlugin extends PluginAdapter {
 
     private void addBaseMethod(IntrospectedTable introspectedTable, TopLevelClass restClass, String xService, String pk) {
         String bean = Introspector.decapitalize(introspectedTable.getFullyQualifiedTable().getDomainObjectName());
-        String Bean = introspectedTable.getFullyQualifiedTable().getDomainObjectName();
+        String objectName = introspectedTable.getFullyQualifiedTable().getDomainObjectName();
         Method listByPage = new Method("list");
         listByPage.getAnnotations().add("@POST");
         listByPage.getAnnotations().add("@Path(\"list\")");
@@ -187,7 +190,7 @@ public class GenerateBaseServiceAndImplementPlugin extends PluginAdapter {
         add.setReturnType(new FullyQualifiedJavaType("RestResp<" + introspectedTable.getFullyQualifiedTable().getDomainObjectName() + ">"));
         parameter = new Parameter(new FullyQualifiedJavaType("@ApiParam(required = true)@FormParam(\"bean\") String"), "bean");
         add.getParameters().add(parameter);
-        add.getBodyLines().add("" + Bean + " " + bean + " = JsonUtil.fromJson(bean, " + Bean + ".class);");
+        add.getBodyLines().add("" + objectName + " " + bean + " = JsonUtil.fromJson(bean, " + objectName + ".class);");
         add.getBodyLines().add("" + xService + ".saveSelective(" + bean + ");");
         add.getBodyLines().add("return new RestResp<>(" + bean + ");");
         restClass.getMethods().add(add);
@@ -212,7 +215,7 @@ public class GenerateBaseServiceAndImplementPlugin extends PluginAdapter {
         update.getParameters().add(parameter);
         parameter = new Parameter(new FullyQualifiedJavaType("@ApiParam(required = true)@FormParam(\"bean\") String"), "bean");
         update.getParameters().add(parameter);
-        update.getBodyLines().add("" + Bean + " " + bean + " = JsonUtil.fromJson(bean, " + Bean + ".class);");
+        update.getBodyLines().add("" + objectName + " " + bean + " = JsonUtil.fromJson(bean, " + objectName + ".class);");
         update.getBodyLines().add("" + bean + ".setId(id);");
         update.getBodyLines().add("" + xService + ".updateByPrimaryKeySelective(" + bean + ");");
         update.getBodyLines().add("return new RestResp<>();");

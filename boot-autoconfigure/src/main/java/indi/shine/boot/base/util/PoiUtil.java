@@ -14,7 +14,7 @@ import java.util.List;
 public class PoiUtil {
 
     /**
-     * @desc 读取excel, 返回list集合
+     * 读取excel, 返回list集合
      * @author xiezhenxiang 2019/5/30
      * @param fileIn 文件流
      * @param fileName 文件名
@@ -24,7 +24,7 @@ public class PoiUtil {
     }
 
     /**
-     * @desc 读取excel, 返回list集合
+     * 读取excel, 返回list集合
      * @author xiezhenxiang 2019/5/30
      * @param fileIn 文件流
      * @param fileName 文件名

@@ -9,12 +9,16 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
+/**
+ * @author xiezhenxiang 2019/6/13
+ **/
 public final class ExceptionHandler implements ExceptionMapper<Exception> {
     private static final Log logger = LogFactory.getLog(ExceptionHandler.class);
 
     public ExceptionHandler() {
     }
 
+    @Override
     public Response toResponse(Exception exception) {
         Integer code = 90000;
         String errMsg = ErrorMsgUtil.getErrMsg(code);

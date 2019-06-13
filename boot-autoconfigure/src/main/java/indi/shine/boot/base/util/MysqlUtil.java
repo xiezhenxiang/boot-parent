@@ -16,7 +16,7 @@ class MysqlUtil {
     private volatile static Connection con = null;
 
     /**
-     * @desc 增删改
+     * 增删改
      * @author xiezhenxiang 2019/5/14
      * @param sql sql语句
      * @param params 参数
@@ -42,7 +42,7 @@ class MysqlUtil {
     }
 
     /**
-     * @desc 查找
+     * 查找
      * @author xiezhenxiang 2019/5/14
      * @param sql sql语句
      * @param params 参数
@@ -61,13 +61,13 @@ class MysqlUtil {
             }
             ResultSet resultSet = statement.executeQuery();
             ResultSetMetaData metaData = resultSet.getMetaData();
-            int cols_len = metaData.getColumnCount();
+            int colsLen = metaData.getColumnCount();
             while (resultSet.next()) {
                 JSONObject obj = new JSONObject();
-                for (int i = 0; i < cols_len; i++) {
-                    String cols_name = metaData.getColumnName(i + 1);
-                    Object cols_value = resultSet.getObject(cols_name);
-                    obj.put(cols_name, cols_value);
+                for (int i = 0; i < colsLen; i++) {
+                    String colsName = metaData.getColumnName(i + 1);
+                    Object colsValue = resultSet.getObject(colsName);
+                    obj.put(colsName, colsValue);
                 }
                 arr.add(obj);
             }

@@ -9,8 +9,11 @@ import org.springframework.context.ApplicationEvent;
 import org.springframework.context.event.GenericApplicationListener;
 import org.springframework.core.ResolvableType;
 
+/**
+ * @author xiezhenxiang 2019/6/13
+ **/
 public class McnApplicationListener implements GenericApplicationListener {
-    public static final int DEFAULT_ORDER = -2147483638;
+
     private int order = -2147483638;
     private static Class<?>[] EVENT_TYPES = new Class[]{ApplicationStartingEvent.class, ApplicationEnvironmentPreparedEvent.class, ApplicationPreparedEvent.class, ApplicationFailedEvent.class};
     private static Class<?>[] SOURCE_TYPES = new Class[]{SpringApplication.class};
@@ -18,29 +21,32 @@ public class McnApplicationListener implements GenericApplicationListener {
     public McnApplicationListener() {
     }
 
+    @Override
     public void onApplicationEvent(ApplicationEvent applicationEvent) {
         if (applicationEvent instanceof ApplicationStartingEvent) {
-            ;
+            // TODO
         }
 
         if (applicationEvent instanceof ApplicationEnvironmentPreparedEvent) {
-            ;
+            // TODO
         }
 
         if (applicationEvent instanceof ApplicationPreparedEvent) {
-            ;
+            // TODO
         }
 
         if (applicationEvent instanceof ApplicationFailedEvent) {
-            ;
+            // TODO
         }
 
     }
 
+    @Override
     public boolean supportsEventType(ResolvableType resolvableType) {
         return this.isAssignableFrom(resolvableType.getRawClass(), EVENT_TYPES);
     }
 
+    @Override
     public boolean supportsSourceType(Class<?> sourceType) {
         return this.isAssignableFrom(sourceType, SOURCE_TYPES);
     }
@@ -61,6 +67,7 @@ public class McnApplicationListener implements GenericApplicationListener {
         return false;
     }
 
+    @Override
     public int getOrder() {
         return this.order;
     }

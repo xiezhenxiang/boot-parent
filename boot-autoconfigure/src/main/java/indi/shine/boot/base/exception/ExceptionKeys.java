@@ -1,6 +1,7 @@
 package indi.shine.boot.base.exception;
 
 public interface ExceptionKeys {
+
     int PARAM_PARSE_ERROR = 30001;
     int JSON_PARSE_ERROR = 30002;
     int INIT_ERROR = 30003;

@@ -18,8 +18,9 @@ public final class WebApplicationExceptionHandler implements ExceptionMapper<Web
     public WebApplicationExceptionHandler() {
     }
 
+    @Override
     public Response toResponse(WebApplicationException exception) {
-        Integer code = 80004;
+        int code = 80004;
         String errMsg = ErrorMsgUtil.getErrMsg(code);
         Status statusCode = Status.OK;
         if (exception instanceof NotFoundException) {

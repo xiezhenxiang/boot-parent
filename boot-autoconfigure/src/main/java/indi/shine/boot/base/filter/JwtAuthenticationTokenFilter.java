@@ -2,6 +2,7 @@ package indi.shine.boot.base.filter;
 
 import indi.shine.boot.base.exception.ServiceException;
 import indi.shine.boot.base.jwt.JwtToken;
+import org.assertj.core.util.Lists;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -13,7 +14,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.ArrayList;
 
 public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 
@@ -23,6 +23,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
         this.authenticationEntryPoint = authenticationEntryPoint;
     }
 
+    @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
         String header = request.getHeader("Authorization");
         System.out.println("ttt" + header);
@@ -48,7 +49,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
             try {
                 String user = jwtToken.getUserIdAsString();
                 if (user != null) {
-                    return new UsernamePasswordAuthenticationToken(user, (Object)null, new ArrayList());
+                    return new UsernamePasswordAuthenticationToken(user, null, Lists.newArrayList());
                 }
             } catch (Exception var4) {
                 throw ServiceException.newInstance();

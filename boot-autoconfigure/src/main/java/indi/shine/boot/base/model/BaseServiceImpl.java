@@ -25,28 +25,32 @@ public class BaseServiceImpl<T, PK> implements BaseService<T, PK> {
         return new RestData<T>(ls, count);
     }
 
+    @Override
     public T save(T pojo) {
         baseMapper.insert(pojo);
         return pojo;
     }
 
+    @Override
     public T saveSelective(T pojo) {
         baseMapper.insertSelective(pojo);
         return pojo;
     }
 
+    @Override
     public void deleteByPrimaryKey(PK id) {
         this.baseMapper.deleteByPrimaryKey(id);
     }
 
+    @Override
     public T getByPrimaryKey(PK id) {
         return this.baseMapper.selectByPrimaryKey(id);
     }
 
+    @Override
     public void updateByPrimaryKeySelective(T pojo) {
         this.baseMapper.updateByPrimaryKeySelective(pojo);
     }
-
 
     public List<T> pageSelect(T pojo) {
         return baseMapper.pageSelect(pojo);

@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @desc Http请求工具
+ * Http请求工具
  * @author xiezhenxiang 2019/4/12
  **/
 public final class HttpUtil {

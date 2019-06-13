@@ -22,10 +22,11 @@ public class MybatisScanAutoConfig implements Condition {
     public MybatisScanAutoConfig() {
     }
 
+    @Override
     public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
 
         Environment environment = context.getEnvironment();
-        String[] dbs = (String[])environment.getProperty("multiply.datasource.name", String[].class);
+        String[] dbs = environment.getProperty("multiply.datasource.name", String[].class);
         System.out.println(123);
         if (dbs == null || dbs.length == 0) {
             ClassPathMapperScanner scanner = new ClassPathMapperScanner(context.getRegistry());
@@ -35,7 +36,7 @@ public class MybatisScanAutoConfig implements Condition {
             }
             scanner.registerFilters();
             String daoPackage = environment.getProperty("jersey.swagger.base-package") + ".dao";
-            scanner.doScan(new String[]{daoPackage});
+            scanner.doScan(daoPackage);
         }
         System.out.println(46);
         return false;

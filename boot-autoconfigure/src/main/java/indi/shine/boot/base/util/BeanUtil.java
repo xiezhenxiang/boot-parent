@@ -25,6 +25,7 @@ public class BeanUtil implements ApplicationContextAware {
         return ac.getBean(clazz);
     }
 
+    @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         ac = applicationContext;
     }

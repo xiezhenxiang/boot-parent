@@ -1,11 +1,17 @@
 package indi.shine.boot.base.jersey;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
+/**
+ * @author xiezhenxiang 2019/6/13
+ **/
 @ConfigurationProperties(
         prefix = "jersey.swagger"
 )
+@Component
 public class JerseySwaggerProperties {
+
     private String basePackage;
     private Boolean init = true;
     private String version;

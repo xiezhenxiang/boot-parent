@@ -90,8 +90,6 @@ class EsRestUtil {
 			rs = EntityUtils.toString(response.getEntity());
 		} catch (IOException e) {
 			e.printStackTrace();
-		}finally {
-			//close(restClient);
 		}
 		return rs;
 	}
@@ -114,8 +112,6 @@ class EsRestUtil {
 			rs = EntityUtils.toString(response.getEntity());
 		} catch (IOException e) {
 			e.printStackTrace();
-		}finally {
-			//close(restClient);
 		}
 		return rs;
 	}
@@ -124,18 +120,16 @@ class EsRestUtil {
 		RestClient restClient = getClient();
 		int code = 200;
 		try {
-//			String endpoint = "/"+index+"/"+type;//1.7
 			String endpoint = "/"+index+"/_mapping/"+type;//5.x
 			if(StringUtils.isBlank(type)){
 				endpoint = "/"+index;
 			}
-			Response response = restClient.performRequest(HEAD, endpoint);//200存在，404不存在
+			Response response = restClient.performRequest(HEAD, endpoint);
+			code = response.getStatusLine().getStatusCode();
 		} catch (IOException e) {
 			e.printStackTrace();
-		}finally {
-			//close(restClient);
 		}
-		return code == 200?true:false;
+		return code == 200;
 	}
 	
 	public static void close(RestClient restClient){

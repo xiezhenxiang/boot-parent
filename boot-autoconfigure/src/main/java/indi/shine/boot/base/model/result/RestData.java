@@ -13,7 +13,7 @@ public class RestData<T> {
     }
 
     public RestData(List<T> rsData, Integer count) {
-        this(rsData, (long)count.intValue());
+        this(rsData, (long)count);
     }
 
     public RestData(List<T> rsData, Long count) {

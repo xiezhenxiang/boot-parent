@@ -3,8 +3,8 @@ package indi.shine.boot.base.exception;
 import indi.shine.boot.base.util.ErrorMsgUtil;
 
 /**
- * 异常基类，各个模块的运行期异常均继承与该类 
- */
+ * @author xiezhenxiang 2019/6/13
+ **/
 public class BaseException extends RuntimeException {
     private Integer code;
     private String msg;

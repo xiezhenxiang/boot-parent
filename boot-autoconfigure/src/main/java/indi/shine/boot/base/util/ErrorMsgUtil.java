@@ -35,14 +35,14 @@ public class ErrorMsgUtil {
             resourcePropertySource = new ResourcePropertySource("base-error-msg.properties");
             mutablePropertySources.addLast(resourcePropertySource);
         } catch (IOException var3) {
-
+            // TODO
         }
 
         try {
             resourcePropertySource = new ResourcePropertySource("error-msg.properties");
             mutablePropertySources.addLast(resourcePropertySource);
         } catch (IOException var2) {
-
+            // TODO
         }
 
     }

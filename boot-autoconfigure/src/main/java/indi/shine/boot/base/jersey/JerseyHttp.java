@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map.Entry;
 
 public class JerseyHttp {
+
     private JerseyClient client;
     private JerseyClientProperties clientProperties;
 
@@ -36,14 +37,9 @@ public class JerseyHttp {
     }
 
     private MultivaluedMap<String, Object> getDefaultRequestHeader() {
-        MultivaluedMap<String, Object> headers = new MultivaluedHashMap();
+        MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>();
         headers.add("Accept", this.clientProperties.getAcceptContentType());
         return headers;
-    }
-
-    public MultivaluedMap<String, Object> getMultiMap() {
-        MultivaluedMap<String, Object> params = new MultivaluedHashMap();
-        return params;
     }
 
     public String sendGet(String url, MultivaluedMap<String, Object> query) {
@@ -51,7 +47,7 @@ public class JerseyHttp {
     }
 
     public String sendGet(String url, MultivaluedMap<String, Object> headers, MultivaluedMap<String, Object> query) {
-        return (String)this.sendGet(url, headers, query, String.class);
+        return this.sendGet(url, headers, query, String.class);
     }
 
     public <T> T sendGet(String url, MultivaluedMap<String, Object> query, Class<T> cls) {
@@ -77,7 +73,7 @@ public class JerseyHttp {
     }
 
     public String sendPost(String url, MultivaluedMap<String, Object> headers, MultivaluedMap<String, Object> query, MultivaluedMap<String, Object> post) {
-        return (String)this.sendPost(url, headers, query, post, String.class);
+        return this.sendPost(url, headers, query, post, String.class);
     }
 
     public <T> T sendPost(String url, MultivaluedMap<String, Object> query, MultivaluedMap<String, Object> post, Class<T> cls) {
@@ -103,7 +99,7 @@ public class JerseyHttp {
     }
 
     public String sendTextPost(String url, MultivaluedMap<String, Object> headers, MultivaluedMap<String, Object> query, MultivaluedMap<String, Object> post) {
-        return (String)this.sendHttp(url, headers, query, post, MediaType.TEXT_PLAIN_TYPE, String.class);
+        return this.sendHttp(url, headers, query, post, MediaType.TEXT_PLAIN_TYPE, String.class);
     }
 
     public String sendJsonPost(String url, MultivaluedMap<String, Object> query, MultivaluedMap<String, Object> post) {
@@ -111,7 +107,7 @@ public class JerseyHttp {
     }
 
     public String sendJsonPost(String url, MultivaluedMap<String, Object> headers, MultivaluedMap<String, Object> query, MultivaluedMap<String, Object> post) {
-        return (String)this.sendHttp(url, headers, query, post, MediaType.APPLICATION_JSON_TYPE, String.class);
+        return this.sendHttp(url, headers, query, post, MediaType.APPLICATION_JSON_TYPE, String.class);
     }
 
     public String sendUpload(String url, MultivaluedMap<String, Object> query, FormDataMultiPart multipart) {
@@ -120,7 +116,7 @@ public class JerseyHttp {
 
     public String sendUpload(String url, MultivaluedMap<String, Object> headers, MultivaluedMap<String, Object> query, FormDataMultiPart multipart) {
         WebTarget webTarget = this.parseQueryParams(url, query);
-        return (String)webTarget.request().headers(headers).post(Entity.entity(multipart, multipart.getMediaType()), String.class);
+        return webTarget.request().headers(headers).post(Entity.entity(multipart, multipart.getMediaType()), String.class);
     }
 
     private <T> T sendHttp(String url, MultivaluedMap<String, Object> headers, MultivaluedMap<String, Object> query, MultivaluedMap<String, Object> post, MediaType mediaType, Class<T> cls) {
@@ -132,22 +128,23 @@ public class JerseyHttp {
         WebTarget webTarget = this.client.target(url);
         Entry item;
         if (query != null && query.size() > 0) {
-            for(Iterator var4 = query.entrySet().iterator(); var4.hasNext(); webTarget = ((WebTarget)webTarget).queryParam((String)item.getKey(), new Object[]{((List)item.getValue()).size() > 0 ? ((List)item.getValue()).get(0) : null})) {
+            for(Iterator var4 = query.entrySet().iterator(); var4.hasNext(); webTarget = webTarget.queryParam((String)item.getKey(), ((List)item.getValue()).size() > 0 ? ((List)item.getValue()).get(0) : null)) {
                 item = (Entry)var4.next();
             }
         }
 
-        return (WebTarget)webTarget;
+        return webTarget;
     }
 
+    @SuppressWarnings("unchecked")
     private MultivaluedMap<String, String> parsePostParams(MultivaluedMap<String, Object> post) {
-        MultivaluedMap<String, String> p = new MultivaluedHashMap();
+        MultivaluedMap<String, String> p = new MultivaluedHashMap<>();
         if (post != null && post.size() > 0) {
             Iterator var3 = post.entrySet().iterator();
 
             while(var3.hasNext()) {
                 Entry<String, List<Object>> item = (Entry)var3.next();
-                p.add(item.getKey(), ((List)item.getValue()).size() > 0 ? ((List)item.getValue()).get(0).toString() : null);
+                p.add(item.getKey(), (item.getValue()).size() > 0 ? (item.getValue()).get(0).toString() : null);
             }
         }
 

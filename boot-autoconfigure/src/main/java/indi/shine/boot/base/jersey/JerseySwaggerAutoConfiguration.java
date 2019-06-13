@@ -60,25 +60,25 @@ public class JerseySwaggerAutoConfiguration extends ResourceConfig {
             scanner.addIncludeFilter(new AnnotationTypeFilter(Path.class));
             scanner.addIncludeFilter(new AnnotationTypeFilter(Provider.class));
             String otherResourcePackage = this.jersey.getOtherResourcePackage();
-            Set<String> packages = Sets.newHashSet(new String[]{this.jersey.getBasePackage()});
+            Set<String> packages = Sets.newHashSet(this.jersey.getBasePackage());
             if (StringUtils.hasLength(otherResourcePackage)) {
                 String[] var5 = StringUtils.tokenizeToStringArray(otherResourcePackage, ",");
                 int var6 = var5.length;
 
-                for(int var7 = 0; var7 < var6; ++var7) {
+                for (int var7 = 0; var7 < var6; ++var7) {
                     String className = var5[var7];
                     packages.add(className);
                 }
             }
 
-            Set<Class<?>> allClasses = Sets.newHashSet(new Class[]{JacksonJsonProvider.class, ValidationExceptionMapper.class, ExceptionHandler.class, BaseExceptionHandler.class, WebApplicationExceptionHandler.class});
+            Set<Class<?>> allClasses = Sets.newHashSet(JacksonJsonProvider.class, ValidationExceptionMapper.class, ExceptionHandler.class, BaseExceptionHandler.class, WebApplicationExceptionHandler.class);
             Iterator var10 = packages.iterator();
 
-            while(var10.hasNext()) {
+            while (var10.hasNext()) {
                 String pkg = (String)var10.next();
-                Set<Class<?>> collect = (Set)scanner.findCandidateComponents(pkg).stream().map((beanDefinition) -> {
-                    return ClassUtils.resolveClassName(beanDefinition.getBeanClassName(), this.getClassLoader());
-                }).collect(Collectors.toSet());
+                Set<Class<?>> collect = scanner.findCandidateComponents(pkg).stream().map((beanDefinition) ->
+                     ClassUtils.resolveClassName(beanDefinition.getBeanClassName(), this.getClassLoader())
+                ).collect(Collectors.toSet());
                 allClasses.addAll(collect);
             }
 
@@ -113,7 +113,7 @@ public class JerseySwaggerAutoConfiguration extends ResourceConfig {
     )
     public ResourceConfigCustomizer initSwagger2() {
         return (config) -> {
-            config.registerClasses(new Class[]{ApiListingResource.class, SwaggerSerializers.class});
+            config.registerClasses(ApiListingResource.class, SwaggerSerializers.class);
             BeanConfig beanConfig = new BeanConfig();
             beanConfig.setVersion(this.jersey.getVersion());
             beanConfig.setTitle(this.jersey.getTitle());
@@ -134,9 +134,7 @@ public class JerseySwaggerAutoConfiguration extends ResourceConfig {
             name = {"org.glassfish.jersey.media.multipart.MultiPartFeature"}
     )
     public ResourceConfigCustomizer registerMultiPartFeature() {
-        return (config) -> {
-            config.registerClasses(new Class[]{MultiPartFeature.class});
-        };
+        return config -> config.registerClasses(MultiPartFeature.class);
     }
 
     @Bean
@@ -147,12 +145,11 @@ public class JerseySwaggerAutoConfiguration extends ResourceConfig {
             name = {"initSwagger2"}
     )
     public ResourceConfigCustomizer initSwagger2UI() {
-        return (config) -> {
-            config.property("jersey.config.server.mvc.templateBasePath.freemarker", "META-INF/resources").property("jersey.config.server.mvc.caching.freemarker", new Boolean(false)).registerClasses(new Class[]{FreemarkerMvcFeature.class, SwaggerView.class});
-        };
+        return config ->
+            config.property("jersey.config.server.mvc.templateBasePath.freemarker", "META-INF/resources").property("jersey.config.server.mvc.caching.freemarker", false).registerClasses(new Class[]{FreemarkerMvcFeature.class, SwaggerView.class});
     }
 
-    //解决跨域问题
+
     @Bean
     @ConditionalOnWebApplication
     @ConditionalOnClass(
@@ -185,13 +182,4 @@ public class JerseySwaggerAutoConfiguration extends ResourceConfig {
     public JerseyHttp jerseyHttp(JerseyClientProperties clientProperties) {
         return new JerseyHttp(clientProperties);
     }
-
-    /*@Configuration
-    @ConditionalOnClass({DataSource.class, SqlSessionFactory.class, MapperScan.class})
-    @ConditionalOnMissingBean({MapperFactoryBean.class})
-    @ConditionOnSingleDatasource
-    public class QuickConfigMapperScan {
-        public QuickConfigMapperScan(){
-        }
-    }*/
 }

@@ -1,9 +1,11 @@
 package indi.shine.boot.base.api;
 
+import com.google.common.collect.Maps;
 import indi.shine.boot.base.jersey.JerseySwaggerProperties;
 import org.glassfish.jersey.server.mvc.Template;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import javax.annotation.Resource;
 import javax.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -12,11 +14,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * @author xiezhenxiang 2019/6/13
+ **/
 @Singleton
 @Path("/")
 @Produces({"text/html"})
 public class SwaggerView {
-    @Autowired
+    @Resource
     private JerseySwaggerProperties jerseySwaggerProperties;
 
     public SwaggerView() {
@@ -29,7 +34,7 @@ public class SwaggerView {
     )
     public Map<String, Object> indexView() {
 
-        Map<String, Object> map = new HashMap<>();
+        Map<String, Object> map = Maps.newHashMap();
         if (Objects.nonNull(this.jerseySwaggerProperties.getHost())) {
             map.put("host", this.jerseySwaggerProperties.getHost());
         } else {

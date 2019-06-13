@@ -27,20 +27,18 @@ public class MybatisGenUtil {
             var2.printStackTrace();
         }
 
-        genMapperAndXml(Boolean.valueOf(prop.getProperty("overwrite", "false")).booleanValue());
+        genMapperAndXml(Boolean.valueOf(prop.getProperty("overwrite", "false")));
     }
 
     private static void genMapperAndXml(boolean overwrite) {
-        List<String> warnings = new ArrayList();
+        List<String> warnings = new ArrayList<>();
         ConfigurationParser cfgParser = new ConfigurationParser(warnings);
         Configuration config = null;
 
         try {
             config = cfgParser.parseConfiguration(MybatisGenUtil.class.getClassLoader().getResourceAsStream("generatorConfig.xml"));
-        } catch (IOException var11) {
+        } catch (Exception var11) {
             var11.printStackTrace();
-        } catch (XMLParserException var12) {
-            var12.printStackTrace();
         }
 
         DefaultShellCallback callback = new DefaultShellCallback(overwrite);
@@ -53,14 +51,10 @@ public class MybatisGenUtil {
         }
 
         try {
-            generator.generate((ProgressCallback)null);
+            generator.generate(null);
             System.out.println("mybatis generator success");
-        } catch (SQLException var7) {
-            var7.printStackTrace();
-        } catch (IOException var8) {
+        } catch (Exception var8) {
             var8.printStackTrace();
-        } catch (InterruptedException var9) {
-            var9.printStackTrace();
         }
 
     }

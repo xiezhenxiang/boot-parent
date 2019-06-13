@@ -16,19 +16,23 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * @author xiezhenxiang 2019/6/13
+ **/
 public class McnPropertiesPostProcessor implements EnvironmentPostProcessor, Ordered {
-    public static final String APP_BASE_PACKAGE_PROPERTY = "jersey.swagger.base-package";
+    private static final String JERSEY_BASE_PACKAGE = "jersey.swagger.base-package";
 
     public McnPropertiesPostProcessor() {
     }
 
+    @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
         MutablePropertySources propertySources = environment.getPropertySources();
         Map<String, Object> mapProp = Maps.newHashMap();
-        mapProp.put("jersey.swagger.base-package", ClassUtils.getPackageName(application.getMainApplicationClass()));
+        mapProp.put(JERSEY_BASE_PACKAGE, ClassUtils.getPackageName(application.getMainApplicationClass()));
         mapProp.put("shine.version", this.getClass().getPackage().getImplementationVersion());
 
-        mapProp.put("logging.level." + mapProp.get("jersey.swagger.base-package") + ".dao", "info");
+        mapProp.put("logging.level." + mapProp.get(JERSEY_BASE_PACKAGE) + ".dao", "info");
         propertySources.addLast(new MapPropertySource("init_prop", mapProp));
 
 
@@ -38,7 +42,7 @@ public class McnPropertiesPostProcessor implements EnvironmentPostProcessor, Ord
             path = "file:" + path.replace(ClassUtils.getPackageName(this.getClass()).replace(".", "/"), "META-INF");
             propertySources.addLast(new PropertiesPropertySource("boot-default", PropertiesLoaderUtils.loadProperties(new UrlResource(path + "boot-default.properties"))));
         } catch (IOException e) {
-            //e.printStackTrace();
+            // TODO
         }
 
         try {
@@ -47,11 +51,12 @@ public class McnPropertiesPostProcessor implements EnvironmentPostProcessor, Ord
             path = path.replace(ClassUtils.getPackageName(this.getClass()).replace(".", "/"), "META-INF");
             propertySources.addLast(new PropertiesPropertySource("boot-default", PropertiesLoaderUtils.loadProperties(new UrlResource(path + "boot-default.properties"))));
         } catch (IOException e) {
-            //e.printStackTrace();
+            // TODO
         }
 
     }
 
+    @Override
     public int getOrder() {
         return -2147483637;
     }

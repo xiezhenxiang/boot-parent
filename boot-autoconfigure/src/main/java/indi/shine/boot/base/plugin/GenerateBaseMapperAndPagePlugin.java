@@ -18,10 +18,12 @@ public class GenerateBaseMapperAndPagePlugin extends PluginAdapter {
 
     public GenerateBaseMapperAndPagePlugin(){}
 
+    @Override
     public boolean validate(List warnings) {
         return true;
     }
 
+    @Override
     public boolean clientGenerated(Interface face, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         face.getSuperInterfaceTypes().clear();
         face.getImportedTypes().clear();
@@ -38,7 +40,8 @@ public class GenerateBaseMapperAndPagePlugin extends PluginAdapter {
                 }
 
             }
-            FullyQualifiedJavaType baseMapper = new FullyQualifiedJavaType((new StringBuilder()).append("BaseMapper<").append(introspectedTable.getFullyQualifiedTable().getDomainObjectName()).append(",").append(pk).append(">").toString());
+            FullyQualifiedJavaType baseMapper = new FullyQualifiedJavaType("BaseMapper<" +
+                    introspectedTable.getFullyQualifiedTable().getDomainObjectName() + "," + pk + ">");
             face.addImportedType(new FullyQualifiedJavaType(rootInterface));
             face.addImportedType(new FullyQualifiedJavaType(introspectedTable.getBaseRecordType()));
             face.addSuperInterface(baseMapper);
@@ -154,7 +157,7 @@ public class GenerateBaseMapperAndPagePlugin extends PluginAdapter {
         XmlElement baseColumnList = new XmlElement("include");
         baseColumnList.addAttribute(new Attribute("refid", "Base_Column_List"));
         list.addElement(baseColumnList);
-        list.addElement(new TextElement((new StringBuilder()).append("from " + tableName + " where 1 = 1").toString()));
+        list.addElement(new TextElement("from " + tableName + " where 1 = 1"));
         XmlElement qcInclude = new XmlElement("include");
         qcInclude.addAttribute(new Attribute("refid", "queryConditionList"));
         list.addElement(qcInclude);

@@ -20,6 +20,9 @@ import javax.ws.rs.ext.ExceptionMapper;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ * @author xiezhenxiang 2019/6/13
+ **/
 public final class ValidationExceptionMapper implements ExceptionMapper<ValidationException> {
     @Context
     private Configuration config;
@@ -27,22 +30,23 @@ public final class ValidationExceptionMapper implements ExceptionMapper<Validati
     public ValidationExceptionMapper() {
     }
 
+    @Override
     public Response toResponse(ValidationException exception) {
-        RestResp<List<ValidationErrorBean>> objectRestResp = new RestResp();
+        RestResp<List<ValidationErrorBean>> objectRestResp = new RestResp<>();
         objectRestResp.setActionStatus(ActionStatusMethod.FAIL.toString());
-        objectRestResp.setErrorCode(Integer.valueOf(30001));
-        objectRestResp.setErrorInfo(ErrorMsgUtil.getErrMsg(Integer.valueOf(30001)));
+        objectRestResp.setErrorCode(30001);
+        objectRestResp.setErrorInfo(ErrorMsgUtil.getErrMsg(30001));
         if (exception instanceof ConstraintViolationException) {
             ConstraintViolationException cve = (ConstraintViolationException)exception;
             ResponseBuilder response = Response.status(ValidationHelper.getResponseStatus(cve));
             Object property = this.config.getProperty("jersey.config.beanValidation.enableOutputValidationErrorEntity.server");
-            if (property != null && Boolean.valueOf(property.toString()).booleanValue()) {
+            if (property != null && Boolean.valueOf(property.toString())) {
                 response.type(MediaType.APPLICATION_JSON_TYPE);
                 List<ValidationError> errors = ValidationHelper.constraintViolationToValidationErrors(cve);
                 List<ValidationErrorBean> list = Lists.newArrayList();
                 Iterator var8 = errors.iterator();
 
-                while(var8.hasNext()) {
+                while (var8.hasNext()) {
                     ValidationError error = (ValidationError)var8.next();
                     ValidationErrorBean validationErrorBean = new ValidationErrorBean();
                     validationErrorBean.setMessage(error.getMessage());

@@ -2,6 +2,7 @@ package indi.shine.boot.base.exception;
 
 
 public class ServiceException extends BaseException {
+
 	private ServiceException(Integer code) {
 		super(code);
 	}

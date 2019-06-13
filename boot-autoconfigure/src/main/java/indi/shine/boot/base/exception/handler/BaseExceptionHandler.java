@@ -13,7 +13,9 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import java.util.List;
 import java.util.stream.Collectors;
-
+/**
+ * @author xiezhenxiang 2019/6/13
+ **/
 public final class BaseExceptionHandler implements ExceptionMapper<BaseException> {
     private static final Log logger = LogFactory.getLog(BaseExceptionHandler.class);
     private String basePackage =  BeanUtil.getBean(JerseySwaggerProperties.class).getBasePackage();
@@ -21,12 +23,13 @@ public final class BaseExceptionHandler implements ExceptionMapper<BaseException
     public BaseExceptionHandler() {
     }
 
+    @Override
     public Response toResponse(BaseException exception) {
         Integer code = exception.getCode();
         String errMsg = exception.getMsg();
-        exception.setStackTrace((StackTraceElement[])((List)Lists.newArrayList(exception.getStackTrace()).stream().filter((s) -> {
-            return s.getClassName().contains(this.basePackage);
-        }).collect(Collectors.toList())).toArray(new StackTraceElement[0]));
+        exception.setStackTrace((StackTraceElement[])((List)Lists.newArrayList(exception.getStackTrace()).stream().filter((s) ->
+            s.getClassName().contains(this.basePackage)
+        ).collect(Collectors.toList())).toArray(new StackTraceElement[0]));
         logger.error(code, exception);
         return Response.ok(new RestResp(code, errMsg)).type(MediaType.APPLICATION_JSON_TYPE).build();
     }

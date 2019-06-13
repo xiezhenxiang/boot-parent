@@ -1,6 +1,7 @@
 package indi.shine.boot.base.exception;
 
 public class ThirdPartyException extends BaseException {
+
     private ThirdPartyException(Integer code) {
         super(code);
     }
