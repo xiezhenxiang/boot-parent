@@ -1,11 +1,11 @@
 package test;
 
+import com.google.common.collect.Maps;
 import indi.shine.boot.App;
 import indi.shine.boot.base.jersey.JerseyHttp;
 import indi.shine.boot.base.jwt.JwtToken;
 import indi.shine.boot.base.util.HttpUtil;
 import indi.shine.boot.base.util.MybatisGenUtil;
-import com.google.common.collect.Maps;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +42,7 @@ public class GeMybatis {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void jwtTest(){
         HashMap m = Maps.newHashMap();
         m.put("id", "123");

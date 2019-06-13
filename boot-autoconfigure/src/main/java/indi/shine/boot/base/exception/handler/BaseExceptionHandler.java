@@ -27,9 +27,9 @@ public final class BaseExceptionHandler implements ExceptionMapper<BaseException
     public Response toResponse(BaseException exception) {
         Integer code = exception.getCode();
         String errMsg = exception.getMsg();
-        exception.setStackTrace((StackTraceElement[])((List)Lists.newArrayList(exception.getStackTrace()).stream().filter((s) ->
+        exception.setStackTrace(Lists.newArrayList(exception.getStackTrace()).stream().filter(s ->
             s.getClassName().contains(this.basePackage)
-        ).collect(Collectors.toList())).toArray(new StackTraceElement[0]));
+        ).toArray(StackTraceElement[]::new));
         logger.error(code, exception);
         return Response.ok(new RestResp(code, errMsg)).type(MediaType.APPLICATION_JSON_TYPE).build();
     }
