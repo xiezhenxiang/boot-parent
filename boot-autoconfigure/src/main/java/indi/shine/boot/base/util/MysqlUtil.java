@@ -10,9 +10,9 @@ import java.util.Map;
 
 class MysqlUtil {
 
+    private static final String URL = "jdbc:mysql://127.0.0.1:3306/mysql?serverTimezone=UTC&characterEncoding=utf8&autoReconnect=true&useSSL=false";
     private static final String USERNAME = "root";
     private static final String PASSWORD = "root";
-    private static final String URL = "jdbc:mysql://127.0.0.1:3306/mysql?serverTimezone=UTC&characterEncoding=utf8&autoReconnect=true&useSSL=false";
     private volatile static Connection con = null;
 
     /**
