@@ -1,4 +1,4 @@
-package indi.shine.boot.base.util;
+package com.hiekn.wrapper.util;
 
 import java.util.regex.Pattern;
 
@@ -8,58 +8,54 @@ import java.util.regex.Pattern;
  **/
 public class TypeCheckUtil {
 
-    public static boolean IntCheck(Object str) {
-        if (str == null) {
+    public static boolean intCheck(Object obj) {
+        if (obj == null ) {
             return false;
         }
-        if (!Pattern.matches("^[-\\+]?[\\d]*$", str.toString())) {
-            return false;
-        }
-        return true;
-    }
-
-    public static boolean whitDecimalPointIntCheck(Object str) {
-        if (str == null) {
-            return false;
-        }
-        if (!Pattern.matches("^\\d+(\\.(0)+)?$", str.toString())) {
+        if (!Pattern.matches("^[-\\+]?[\\d]*$", obj.toString())) {
             return false;
         }
         return true;
     }
 
-    public static boolean doubleCheck(Object str) {
-        if (str == null) {
-            return false;
+    public static boolean doubleCheck(Object obj) {
+        if (obj != null) {
+            if (Pattern.matches("^(-?\\d+)(\\.\\d+)?$", obj.toString())) {
+                return true;
+            }
         }
-        if (!Pattern.matches("^(-?\\d+)(\\.\\d+)?$", str.toString())) {
-            return false;
-        }
-        return true;
+        return false;
     }
 
-    public static boolean booleanCheck(Object str) {
-        if (str == null) {
+    public static boolean booleanCheck(Object obj) {
+        if (obj == null) {
             return false;
         }
-        if (str instanceof Boolean) {
+        if (obj instanceof Boolean) {
             return true;
         }
-        if (str.toString().equals("true") || str.toString().equals("false")) {
+        if (obj.toString().equals("true") || obj.toString().equals("false")) {
             return true;
         }
         return false;
     }
 
 
-    /** 0000-00-00 */
-    public static boolean dateCheck(Object str) {
-        if (str == null) {
-            return false;
+    /**
+     * yyyy-MM-dd or yyyy-MM-dd HH:mm:ss
+     * @author xiezhenxiang 2019/6/17
+     **/
+    public static boolean dateCheck(Object obj) {
+        if (obj != null) {
+            String format = "^((1|2)\\d\\d\\d)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$";
+            if (Pattern.matches(format, obj.toString())) {
+                return true;
+            }
+            format = "^((1|2)\\d\\d\\d)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01]) [0-2]\\d:[0-5]\\d:[0-5]\\d$";
+            if (Pattern.matches(format, obj.toString())) {
+                return true;
+            }
         }
-        if (!Pattern.matches("^((?:19|20)\\d\\d)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$", str.toString())) {
-            return false;
-        }
-        return true;
+        return false;
     }
 }
