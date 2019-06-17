@@ -1,4 +1,4 @@
-package com.hiekn.wrapper.util;
+package indi.shine.boot.base.util;
 
 import java.util.regex.Pattern;
 
