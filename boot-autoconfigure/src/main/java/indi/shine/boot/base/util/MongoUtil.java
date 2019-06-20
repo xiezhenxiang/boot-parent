@@ -111,8 +111,12 @@ class MongoUtil {
         sort = sort == null ? new Document() : sort;
         try {
             FindIterable<Document> findIterable = client.getDatabase(db).getCollection(col).find(query).sort(sort);
-            if(pageNo != null)  findIterable.skip(pageNo);
-            if(pageSize != null)    findIterable.limit(pageSize);
+            if(pageNo != null) {
+                findIterable.skip(pageNo);
+            }
+            if(pageSize != null) {
+                findIterable.limit(pageSize);
+            }
             mongoCursor = findIterable.noCursorTimeout(true).iterator();
         } catch (Exception e) {
             e.printStackTrace();
@@ -150,8 +154,9 @@ class MongoUtil {
     }
 
     public static void createIndex(String db, String col, List<Document> index) {
-        if (index.isEmpty())
+        if (index.isEmpty()) {
             return;
+        }
         getMongoClient();
         List<IndexModel> ls = index.stream().map(IndexModel::new).collect(toList());
         client.getDatabase(db).getCollection(col).createIndexes(ls);
