@@ -6,6 +6,7 @@ import com.mongodb.MongoClientOptions;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoIterable;
 import com.mongodb.client.model.IndexModel;
 import com.mongodb.client.model.UpdateOneModel;
 import com.mongodb.client.model.UpdateOptions;
@@ -28,6 +29,34 @@ class MongoUtil {
     private static final String MONGODB_URL = "127.0.0.1";
     private static final int MONGODB_PORT = 27017;
     private volatile static MongoClient client = null;
+
+
+    public static MongoCursor<Document> find(String db, String col, Document query, Document sort) {
+        return find(db, col, query, sort, null, null);
+    }
+
+    public static MongoCursor<Document> find(String db, String col, Document query) {
+        return find(db, col, query, null, null, null);
+    }
+
+    public static MongoCursor<Document> find(String db, String col, Document query, Document sort, Integer pageNo, Integer pageSize) {
+        getMongoClient();
+        MongoCursor<Document> mongoCursor = null;
+        query = query == null ? new Document() : query;
+        sort = sort == null ? new Document() : sort;
+        try {
+            FindIterable<Document> findIterable = client.getDatabase(db).getCollection(col).find(query).sort(sort);
+            if(pageNo != null && pageSize != null) {
+                pageNo = (pageNo - 1) * pageSize;
+                findIterable.skip(pageNo);
+                findIterable.limit(pageSize);
+            }
+            mongoCursor = findIterable.noCursorTimeout(true).iterator();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return mongoCursor;
+    }
 
     public static void insertMany(String database, String collection, List<Document> documentList) {
         getMongoClient();
@@ -71,18 +100,18 @@ class MongoUtil {
     public static void upsertManey(String database, String collection, List<Document> ls, List<String> fields) {
         getMongoClient();
         List<UpdateOneModel<Document>> requests = ls.stream().map(s -> new UpdateOneModel<Document>(
-            new Bson() {
-                @Override
-                public <TDocument> BsonDocument toBsonDocument(Class<TDocument> aClass, CodecRegistry codecRegistry) {
-                    Document doc = new Document();
-                    for (String field : fields) {
-                        doc.append(field, s.get(field));
+                new Bson() {
+                    @Override
+                    public <TDocument> BsonDocument toBsonDocument(Class<TDocument> aClass, CodecRegistry codecRegistry) {
+                        Document doc = new Document();
+                        for (String field : fields) {
+                            doc.append(field, s.get(field));
+                        }
+                        return doc.toBsonDocument(aClass, codecRegistry);
                     }
-                    return doc.toBsonDocument(aClass, codecRegistry);
-                }
-            },
-            new Document("$set",s),
-            new UpdateOptions().upsert(true)
+                },
+                new Document("$set",s),
+                new UpdateOptions().upsert(true)
         )).collect(Collectors.toList());
         client.getDatabase(database).getCollection(collection).bulkWrite(requests);
     }
@@ -91,42 +120,6 @@ class MongoUtil {
         getMongoClient();
         try {
             client.getDatabase(database).getCollection(collection).updateMany(query, new Document("$set", doc));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static MongoCursor<Document> find(String db, String col, Document query, Document sort) {
-        return find(db, col, query, sort, null, null);
-    }
-
-    public static MongoCursor<Document> find(String db, String col, Document query) {
-        return find(db, col, query, null, null, null);
-    }
-
-    public static MongoCursor<Document> find(String db, String col, Document query, Document sort, Integer pageNo, Integer pageSize) {
-        getMongoClient();
-        MongoCursor<Document> mongoCursor = null;
-        query = query == null ? new Document() : query;
-        sort = sort == null ? new Document() : sort;
-        try {
-            FindIterable<Document> findIterable = client.getDatabase(db).getCollection(col).find(query).sort(sort);
-            if(pageNo != null && pageSize != null) {
-                pageNo = (pageNo - 1) * pageSize;
-                findIterable.skip(pageNo);
-                findIterable.limit(pageSize);
-            }
-            mongoCursor = findIterable.noCursorTimeout(true).iterator();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return mongoCursor;
-    }
-
-    public static void delete(String db, String col, Document query){
-        getMongoClient();
-        try {
-            client.getDatabase(db).getCollection(col).deleteMany(query);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -152,6 +145,15 @@ class MongoUtil {
         return indexs;
     }
 
+    public static void delete(String db, String col, Document query){
+        getMongoClient();
+        try {
+            client.getDatabase(db).getCollection(col).deleteMany(query);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void createIndex(String db, String col, List<Document> index) {
         if (index.isEmpty()) {
             return;
@@ -159,6 +161,37 @@ class MongoUtil {
         getMongoClient();
         List<IndexModel> ls = index.stream().map(IndexModel::new).collect(toList());
         client.getDatabase(db).getCollection(col).createIndexes(ls);
+    }
+
+
+    public static synchronized void copyDataBase(String fromDbName, String toDbName) {
+        getMongoClient();
+        MongoIterable<String> colNames = client.getDatabase(fromDbName).listCollectionNames();
+
+        for (String colName : colNames) {
+            copyCollection(fromDbName, colName, toDbName, colName);
+        }
+    }
+
+    public static void copyCollection(String fromDbName, String fromColName, String toDbName, String toColName) {
+
+        List<Document> indexLs = getIndex(fromDbName, fromColName);
+        // 复制索引
+        createIndex(toDbName, toColName, indexLs);
+        // 一万条批量插入
+        int pageNo = 1, pageSize = 10000;
+        while (true) {
+            MongoCursor<Document> cursor = find(fromDbName, fromColName, null, null, pageNo, pageSize);
+            if (!cursor.hasNext()) {
+                break;
+            }
+            List<Document> docLs = Lists.newArrayList();
+            while (cursor.hasNext()) {
+                docLs.add(cursor.next());
+            }
+            insertMany(toDbName, toColName, docLs);
+            pageNo ++;
+        }
     }
 
     public static MongoClient getMongoClient() {
