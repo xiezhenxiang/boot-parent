@@ -112,6 +112,7 @@ class MongoUtil {
         try {
             FindIterable<Document> findIterable = client.getDatabase(db).getCollection(col).find(query).sort(sort);
             if(pageNo != null) {
+                pageNo = (pageNo - 1) * pageSize;
                 findIterable.skip(pageNo);
             }
             if(pageSize != null) {
