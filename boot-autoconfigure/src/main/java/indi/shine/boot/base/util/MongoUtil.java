@@ -111,11 +111,9 @@ class MongoUtil {
         sort = sort == null ? new Document() : sort;
         try {
             FindIterable<Document> findIterable = client.getDatabase(db).getCollection(col).find(query).sort(sort);
-            if(pageNo != null) {
+            if(pageNo != null && pageSize != null) {
                 pageNo = (pageNo - 1) * pageSize;
                 findIterable.skip(pageNo);
-            }
-            if(pageSize != null) {
                 findIterable.limit(pageSize);
             }
             mongoCursor = findIterable.noCursorTimeout(true).iterator();
