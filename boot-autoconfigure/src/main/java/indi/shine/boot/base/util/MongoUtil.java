@@ -97,14 +97,14 @@ class MongoUtil {
         }
     }
 
-    public static void upsertManey(String database, String collection, List<Document> ls, List<String> fields) {
+    public static void upsertMany(String database, String collection, List<Document> ls, String... fieldArr) {
         getMongoClient();
         List<UpdateOneModel<Document>> requests = ls.stream().map(s -> new UpdateOneModel<Document>(
                 new Bson() {
                     @Override
                     public <TDocument> BsonDocument toBsonDocument(Class<TDocument> aClass, CodecRegistry codecRegistry) {
                         Document doc = new Document();
-                        for (String field : fields) {
+                        for (String field : fieldArr) {
                             doc.append(field, s.get(field));
                         }
                         return doc.toBsonDocument(aClass, codecRegistry);
