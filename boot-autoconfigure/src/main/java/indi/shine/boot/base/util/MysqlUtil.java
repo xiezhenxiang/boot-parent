@@ -21,14 +21,14 @@ class MysqlUtil {
      * @param sql sql语句
      * @param params 参数
      **/
-    public static boolean executeUpdate(String sql, List<Object> params) {
+    public static boolean executeUpdate(String sql, Object... params) {
         getConnection();
         PreparedStatement statement;
         int result = 0;
         try {
             statement = con.prepareStatement(sql);
             int index = 1;
-            if (params != null && !params.isEmpty()) {
+            if (params != null && params.length > 0) {
                 for (Object para : params) {
                     statement.setObject(index++, para);
                 }
@@ -47,14 +47,14 @@ class MysqlUtil {
      * @param sql sql语句
      * @param params 参数
      **/
-    public static JSONArray executeQuery(String sql, List<Object> params){
+    public static JSONArray executeQuery(String sql, Object... params){
         getConnection();
         JSONArray arr = new JSONArray();
         PreparedStatement statement;
         try {
             int index = 1;
             statement = con.prepareStatement(sql);
-            if (params != null && !params.isEmpty()) {
+            if (params != null && params.length > 0) {
                 for (Object para : params) {
                     statement.setObject(index ++, para);
                 }
