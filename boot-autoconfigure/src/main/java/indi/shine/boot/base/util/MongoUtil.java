@@ -1,9 +1,8 @@
 package indi.shine.boot.base.util;
 
+import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientOptions;
-import com.mongodb.ServerAddress;
+import com.mongodb.*;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoIterable;
@@ -139,10 +138,10 @@ class MongoUtil {
 
     public static List<Document> getIndex(String db, String col) {
         getMongoClient();
-        List<Document> indexs = Lists.newArrayList();
+        List<Document> indexLs = Lists.newArrayList();
         MongoCursor<Document> cursor = client.getDatabase(db).getCollection(col).listIndexes().iterator();
-        cursor.forEachRemaining(s -> indexs.add((Document) s.get("key")));
-        return indexs;
+        cursor.forEachRemaining(s -> indexLs.add((Document) s.get("key")));
+        return indexLs;
     }
 
     public static void delete(String db, String col, Document query){
