@@ -1,7 +1,5 @@
 package indi.shine.boot.base.util;
 
-import com.alibaba.fastjson.JSONObject;
-import com.google.common.collect.Lists;
 import com.mongodb.*;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCursor;
@@ -138,7 +136,7 @@ class MongoUtil {
 
     public static List<Document> getIndex(String db, String col) {
         getMongoClient();
-        List<Document> indexLs = Lists.newArrayList();
+        List<Document> indexLs = new ArrayList<>();
         MongoCursor<Document> cursor = client.getDatabase(db).getCollection(col).listIndexes().iterator();
         cursor.forEachRemaining(s -> indexLs.add((Document) s.get("key")));
         return indexLs;
@@ -184,7 +182,7 @@ class MongoUtil {
             if (!cursor.hasNext()) {
                 break;
             }
-            List<Document> docLs = Lists.newArrayList();
+            List<Document> docLs = new ArrayList<>();
             while (cursor.hasNext()) {
                 docLs.add(cursor.next());
             }
