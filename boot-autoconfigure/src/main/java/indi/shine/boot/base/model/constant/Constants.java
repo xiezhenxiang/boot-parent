@@ -5,32 +5,31 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.core.io.support.ResourcePropertySource;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Properties;
 
 class Constants {
     private Constants() {
     }
 
     private static final Log logger = LogFactory.getLog(Constants.class);
-    private static ResourcePropertySource props;
+    private static Properties props = new Properties();
 
     static {
+        String localPath = ClassUtil.getProjectDir() + "/classes/demo.properties";
         String prodPath = ClassUtil.getProjectDir() + "/conf/demo.properties";
-        String[] filePath= new String[]{"demo.properties", prodPath};
+        String[] filePath= new String[]{localPath, prodPath};
 
         for (String path : filePath){
             try {
-                props = new ResourcePropertySource(path);
+                props.load(new FileInputStream(path));
             } catch (IOException e) {
                 // todo
             }
         }
-        if (props == null)
+        if (props.isEmpty()) {
             logger.info("未加载到配置文件");
-    }
-
-    public static String getValue(String key) {
-        Object value = props.getProperty(key);
-        return value == null ? null : value.toString();
+        }
     }
 }
