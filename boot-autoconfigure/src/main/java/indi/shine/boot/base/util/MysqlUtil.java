@@ -101,7 +101,7 @@ class MysqlUtil {
         } else {
             return true;
         }
-        executeUpdate(sql, values);
+        executeUpdate(sql, values.toArray());
         return true;
     }
 
