@@ -2,17 +2,24 @@ package indi.shine.boot.base.util;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.TimeZone;
 
 /**
  * @author xiezhenxiang 2019/5/14
  */
-public class DateUtil {
+public class TimeUtil {
 
 
     /** 获取字符串日期 */
     public static String nowStr() {
         return LocalDate.now() + " " + LocalTime.now().withNano(0);
+    }
+
+    /** 获取当前时间 */
+    public static Date now() {
+        ZonedDateTime zdt = LocalDateTime.now().atZone(ZoneId.systemDefault());
+        return Date.from(zdt.toInstant());
     }
 
     /** 获取时间戳 */
