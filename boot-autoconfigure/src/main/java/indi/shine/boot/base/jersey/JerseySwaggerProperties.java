@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(
         prefix = "jersey.swagger"
 )
-@Component
 public class JerseySwaggerProperties {
 
     private String basePackage;

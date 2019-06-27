@@ -21,7 +21,7 @@ import java.util.Objects;
 @Path("/")
 @Produces({"text/html"})
 public class SwaggerView {
-    @Resource
+    @Autowired
     private JerseySwaggerProperties jerseySwaggerProperties;
 
     public SwaggerView() {
