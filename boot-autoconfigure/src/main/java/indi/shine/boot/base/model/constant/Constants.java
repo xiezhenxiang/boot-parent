@@ -17,8 +17,9 @@ class Constants {
     private static Properties props = new Properties();
 
     static {
-        String localPath = ClassUtil.getProjectDir(Constants.class) + "/classes/constants.properties";
-        String prodPath = ClassUtil.getProjectDir(Constants.class).replace("/lib", "/conf") + "constants.properties";
+        String appDir = ClassUtil.getProjectDir(Constants.class);
+        String localPath = appDir + "classes/config/application.properties";
+        String prodPath = appDir.replace("/lib", "/conf") + "application.properties";
         String[] filePath= new String[]{localPath, prodPath};
 
         for (String path : filePath){
