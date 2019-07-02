@@ -39,7 +39,7 @@ window.SwaggerTranslator.learn({
     "Created by":"创建者",
     "See more at":"查看更多：",
     "Contact the developer":"联系开发者",
-    "api version":"api版本",
+    "api version":"api version",
     "Response Content Type":"响应Content Type",
     "Parameter content type:":"参数类型:",
     "fetching resource":"正在获取资源",
