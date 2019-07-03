@@ -5,8 +5,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>boot-parent</artifactId>
         <groupId>indi.shine.boot</groupId>
+        <artifactId>boot-parent</artifactId>
         <version>5.5</version>
     </parent>
 
