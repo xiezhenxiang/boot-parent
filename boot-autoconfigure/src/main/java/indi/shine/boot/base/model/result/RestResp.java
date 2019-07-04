@@ -9,7 +9,7 @@ import lombok.Data;
 @Data
 public class RestResp<T> {
 
-    @JsonProperty("status")
+    @JsonProperty("Status")
     private String status;
     @JsonProperty("ErrorCode")
     private Integer errorCode;
