@@ -1,5 +1,6 @@
 package indi.shine.boot.base.jwt;
 
+import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -7,6 +8,7 @@ import java.util.List;
 
 @ConfigurationProperties("jwt")
 @Component
+@Data
 public class JwtProperties {
 
     private String secretKey = "BOOT_SECRET";
@@ -15,68 +17,9 @@ public class JwtProperties {
     private Integer expireDate = 7;
     private Security security = new Security();
 
-    public JwtProperties() {
-    }
-
-    public String getSecretKey() {
-        return this.secretKey;
-    }
-
-    public void setSecretKey(String secretKey) {
-        this.secretKey = secretKey;
-    }
-
-    public String getIssuer() {
-        return this.issuer;
-    }
-
-    public void setIssuer(String issuer) {
-        this.issuer = issuer;
-    }
-
-    public Long getRefreshInterval() {
-        return this.refreshInterval;
-    }
-
-    public void setRefreshInterval(Long refreshInterval) {
-        this.refreshInterval = refreshInterval;
-    }
-
-    public Integer getExpireDate() {
-        return this.expireDate;
-    }
-
-    public void setExpireDate(Integer expireDate) {
-        this.expireDate = expireDate;
-    }
-
-    public Security getSecurity() {
-        return this.security;
-    }
-
-    public void setSecurity(Security security) {
-        this.security = security;
-    }
-
+    @Data
     class Security {
-
         private Boolean login = false;
         private List<String> ignoreUrls;
-
-        public Boolean getLogin() {
-            return this.login;
-        }
-
-        public void setLogin(Boolean login) {
-            this.login = login;
-        }
-
-        public List<String> getIgnoreUrls() {
-            return this.ignoreUrls;
-        }
-
-        public void setIgnoreUrls(List<String> ignoreUrls) {
-            this.ignoreUrls = ignoreUrls;
-        }
     }
 }
