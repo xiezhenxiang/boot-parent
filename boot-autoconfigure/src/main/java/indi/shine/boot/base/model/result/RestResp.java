@@ -9,8 +9,11 @@ import lombok.Data;
 @Data
 public class RestResp<T> {
 
+    @JsonProperty("status")
     private String status;
+    @JsonProperty("errorCode")
     private Integer errorCode;
+    @JsonProperty("errorInfo")
     private String errorInfo;
     private T data;
 
