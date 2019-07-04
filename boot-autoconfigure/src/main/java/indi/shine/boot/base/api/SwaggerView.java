@@ -21,13 +21,14 @@ import java.util.Objects;
 @Path("/")
 @Produces({"text/html"})
 public class SwaggerView {
+
     @Autowired
     private JerseySwaggerProperties jerseySwaggerProperties;
 
     public SwaggerView() {
     }
 
-    @Path("/Swagger.html")
+    @Path("/swagger.html")
     @GET
     @Template(
             name = "/index"
