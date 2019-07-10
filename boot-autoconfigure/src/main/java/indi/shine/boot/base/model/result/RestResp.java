@@ -11,24 +11,24 @@ public class RestResp<T> {
 
     @JsonProperty("status")
     private String status;
-    @JsonProperty("errorCode")
+    @JsonProperty("code")
     private Integer errorCode;
-    @JsonProperty("errorInfo")
+    @JsonProperty("msg")
     private String errorInfo;
     private T data;
 
-    public static final String SUCCESS_STATUS = "OK";
-    public static final String ERROR_STATUS = "FAIL";
+    public static final String SUCCESS_STATUS = "ok";
+    public static final String ERROR_STATUS = "fail";
 
     public RestResp() {
         this.status = SUCCESS_STATUS;
-        this.errorCode = 0;
+        this.errorCode = 200;
         this.errorInfo = "";
     }
 
     public RestResp(Integer code, String msg) {
         this.status = SUCCESS_STATUS;
-        this.errorCode = 0;
+        this.errorCode = 200;
         this.errorInfo = "";
         this.status = ERROR_STATUS;
         this.errorCode = code;
@@ -37,7 +37,7 @@ public class RestResp<T> {
 
     public RestResp(T data) {
         this.status = SUCCESS_STATUS;
-        this.errorCode = 0;
+        this.errorCode = 200;
         this.errorInfo = "";
         this.data = data;
     }
