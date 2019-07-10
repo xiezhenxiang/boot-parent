@@ -9,51 +9,31 @@ import lombok.Data;
 @Data
 public class RestResp<T> {
 
-    @JsonProperty("status")
-    private String status;
     @JsonProperty("code")
-    private Integer errorCode;
+    private Integer code = 200;
     @JsonProperty("msg")
-    private String errorInfo;
+    private String msg = "ok";
     private T data;
 
-    public static final String SUCCESS_STATUS = "ok";
-    public static final String ERROR_STATUS = "fail";
-
     public RestResp() {
-        this.status = SUCCESS_STATUS;
-        this.errorCode = 200;
-        this.errorInfo = "";
     }
 
     public RestResp(Integer code, String msg) {
-        this.status = SUCCESS_STATUS;
-        this.errorCode = 200;
-        this.errorInfo = "";
-        this.status = ERROR_STATUS;
-        this.errorCode = code;
-        this.errorInfo = msg;
+        this.code = code;
+        this.msg = msg;
     }
 
     public RestResp(T data) {
-        this.status = SUCCESS_STATUS;
-        this.errorCode = 200;
-        this.errorInfo = "";
         this.data = data;
     }
 
     @JsonIgnore
-    public String getStatus() {
-        return this.status;
+    public Integer getCode() {
+        return this.code;
     }
 
     @JsonIgnore
-    public Integer getErrorCode() {
-        return this.errorCode;
-    }
-
-    @JsonIgnore
-    public String getErrorInfo() {
-        return this.errorInfo;
+    public String getMsg() {
+        return this.msg;
     }
 }

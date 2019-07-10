@@ -10,8 +10,6 @@ import java.io.IOException;
 import java.util.Properties;
 
 class Constants {
-    private Constants() {
-    }
 
     private static final Log logger = LogFactory.getLog(Constants.class);
     private static Properties props = new Properties();

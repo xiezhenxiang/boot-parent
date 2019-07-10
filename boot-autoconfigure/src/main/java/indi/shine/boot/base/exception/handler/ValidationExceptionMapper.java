@@ -31,10 +31,10 @@ public final class ValidationExceptionMapper implements ExceptionMapper<Validati
 
     @Override
     public Response toResponse(ValidationException exception) {
-        RestResp<List<ValidationErrorBean>> objectRestResp = new RestResp<>();
-        objectRestResp.setStatus(RestResp.ERROR_STATUS);
-        objectRestResp.setErrorCode(30001);
-        objectRestResp.setErrorInfo(ErrorMsgUtil.getErrMsg(30001));
+        RestResp<List<ValidationErrorBean>> rs = new RestResp<>();
+        rs.setCode(30001);
+        rs.setMsg(ErrorMsgUtil.getErrMsg(30001));
+
         if (exception instanceof ConstraintViolationException) {
             ConstraintViolationException cve = (ConstraintViolationException)exception;
             ResponseBuilder response = Response.status(ValidationHelper.getResponseStatus(cve));
@@ -54,10 +54,10 @@ public final class ValidationExceptionMapper implements ExceptionMapper<Validati
                     list.add(validationErrorBean);
                 }
 
-                objectRestResp.setData(list);
+                rs.setData(list);
             }
         }
 
-        return Response.ok(objectRestResp).build();
+        return Response.ok(rs).build();
     }
 }
