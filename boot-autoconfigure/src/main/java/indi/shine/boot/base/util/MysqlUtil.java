@@ -107,17 +107,21 @@ class MysqlUtil {
 
 
     private static Connection getConnection() {
-        if (con == null) {
-            synchronized (MysqlUtil.class){
-                if (con == null) {
-                    try {
-                        Class.forName("com.mysql.cj.jdbc.Driver");
-                        con = DriverManager.getConnection(URL, USERNAME, PASSWORD);
-                    } catch (Exception e) {
-                        e.printStackTrace();
+        try {
+            if (con == null || con.isClosed()) {
+                synchronized (MysqlUtil.class) {
+                    if (con == null || con.isClosed()) {
+                        try {
+                            Class.forName("com.mysql.cj.jdbc.Driver");
+                            con = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
         return con;
     }
