@@ -32,8 +32,8 @@ public final class ValidationExceptionMapper implements ExceptionMapper<Validati
     @Override
     public Response toResponse(ValidationException exception) {
         RestResp<List<ValidationErrorBean>> rs = new RestResp<>();
-        rs.setCode(30001);
-        rs.setMsg(ErrorMsgUtil.getErrMsg(30001));
+        rs.setErrorCode(30001);
+        rs.setErrorInfo(ErrorMsgUtil.getErrMsg(30001));
 
         if (exception instanceof ConstraintViolationException) {
             ConstraintViolationException cve = (ConstraintViolationException)exception;
