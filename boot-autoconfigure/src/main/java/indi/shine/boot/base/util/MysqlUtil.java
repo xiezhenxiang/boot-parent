@@ -47,9 +47,9 @@ class MysqlUtil {
      * @param sql sql语句
      * @param params 参数
      **/
-    public static JSONArray executeQuery(String sql, Object... params){
+    public static List<JSONObject> executeQuery(String sql, Object... params){
         getConnection();
-        JSONArray arr = new JSONArray();
+        List<JSONObject> ls = Lists.newArrayList();
         PreparedStatement statement;
         try {
             int index = 1;
@@ -69,12 +69,12 @@ class MysqlUtil {
                     Object colsValue = resultSet.getObject(colsName);
                     obj.put(colsName, colsValue);
                 }
-                arr.add(obj);
+                ls.add(obj);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return arr;
+        return ls;
     }
 
     /**
