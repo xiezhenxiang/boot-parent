@@ -83,7 +83,11 @@ class MongoUtil {
         client.getDatabase(database).getCollection(collection).updateOne(query, doc, new UpdateOptions().upsert(true));
     }
 
-    public static void upsertMany(String database, String collection, List<Document> ls, String... fieldArr) {
+    public static void upsertMany(String database, String collection, List<Document> ls, boolean upsert, String... fieldArr) {
+
+        if (ls == null || ls.isEmpty()) {
+            return;
+        }
 
         getMongoClient();
         List<UpdateOneModel<Document>> requests = ls.stream().map(s -> new UpdateOneModel<Document>(
@@ -98,7 +102,7 @@ class MongoUtil {
                     }
                 },
                 new Document("$set",s),
-                new UpdateOptions().upsert(true)
+                new UpdateOptions().upsert(upsert)
         )).collect(Collectors.toList());
 
         client.getDatabase(database).getCollection(collection).bulkWrite(requests);
