@@ -20,7 +20,6 @@
     </parent>
 
     <properties>
-        <boot.version>1.0</boot.version>
         <project.build.sourceEncoding>UTF8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF8</project.reporting.outputEncoding>
         <jersey-swagger.version>1.5.19</jersey-swagger.version>
