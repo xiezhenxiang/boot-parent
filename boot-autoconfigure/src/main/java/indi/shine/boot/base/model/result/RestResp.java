@@ -9,10 +9,13 @@ import lombok.Data;
 @Data
 public class RestResp<T> {
 
-    @JsonProperty("code")
-    private Integer code = 200;
-    @JsonProperty("msg")
-    private String msg = "ok";
+    @JsonProperty("ErrorCode")
+    private Integer code = 0;
+    @JsonProperty("ErrorInfo")
+    private String msg = "";
+    @JsonProperty("ActionStatus")
+    private String status = "OK";
+    @JsonProperty("data")
     private T data;
 
     public RestResp() {
@@ -21,6 +24,7 @@ public class RestResp<T> {
     public RestResp(Integer code, String msg) {
         this.code = code;
         this.msg = msg;
+        this.status = "FAIL";
     }
 
     public RestResp(T data) {

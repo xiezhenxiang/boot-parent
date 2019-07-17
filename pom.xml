@@ -7,7 +7,7 @@
     <groupId>indi.shine.boot</groupId>
     <artifactId>boot-parent</artifactId>
     <packaging>pom</packaging>
-    <version>5.5</version>
+    <version>5.3</version>
     <modules>
         <module>boot-autoconfigure</module>
     </modules>
@@ -20,7 +20,6 @@
     </parent>
 
     <properties>
-        <boot.version>1.0</boot.version>
         <project.build.sourceEncoding>UTF8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF8</project.reporting.outputEncoding>
         <jersey-swagger.version>1.5.19</jersey-swagger.version>
@@ -35,7 +34,7 @@
         <guava.version>23.0</guava.version>
         <es.version>5.5.3</es.version>
         <java.version>1.8</java.version>
-        <shine.version>5.5</shine.version>
+        <shine.version>5.3</shine.version>
         <lombok.version>1.18.2</lombok.version>
     </properties>
 
