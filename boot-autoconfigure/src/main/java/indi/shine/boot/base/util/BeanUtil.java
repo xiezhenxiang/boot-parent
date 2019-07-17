@@ -5,6 +5,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
 public class BeanUtil implements ApplicationContextAware {
+
     private static ApplicationContext ac;
 
     public BeanUtil() {
