@@ -6,7 +6,6 @@ import com.google.common.cache.CacheBuilder;
 import java.util.List;
 
 public class CacheUtil {
-
     private static Cache<String, Object> cache = CacheBuilder.newBuilder().build();
 
     public static void setCache(String key,Object value){

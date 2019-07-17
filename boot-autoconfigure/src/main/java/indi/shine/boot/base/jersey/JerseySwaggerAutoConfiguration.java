@@ -112,7 +112,6 @@ public class JerseySwaggerAutoConfiguration extends ResourceConfig {
             matchIfMissing = true
     )
     public ResourceConfigCustomizer initSwagger2() {
-
         return (config) -> {
             config.registerClasses(ApiListingResource.class, SwaggerSerializers.class);
             BeanConfig beanConfig = new BeanConfig();
