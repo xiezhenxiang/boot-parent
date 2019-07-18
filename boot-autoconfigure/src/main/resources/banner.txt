@@ -1,10 +1,9 @@
-${AnsiColor.CYAN}
-   ____     U  ___ u   U  ___ u _____
-U | __")u    \/"_ \/    \/"_ \/|_ " _|
- \|  _ \/    | | | |    | | | |  | |
-  | |_) |.-,_| |_| |.-,_| |_| | /| |\
-  |____/  \_)-\___/  \_)-\___/ u |_|U
- _|| \\_       \\         \\   _// \\_
-(__) (__)     (__)       (__) (__) (__)
-${AnsiColor.BRIGHT_GREEN} :: Spring Boot :: ${AnsiColor.DEFAULT}   ${AnsiColor.BRIGHT_MAGENTA}${spring-boot.formatted-version}
-${AnsiColor.BRIGHT_GREEN} :: Shine  Boot :: ${AnsiColor.DEFAULT}    ${AnsiColor.BRIGHT_MAGENTA}(v${shine.version}.RELEASE)${AnsiColor.DEFAULT}
+
+ _|      _|    _|_|_|  _|      _|
+ _|_|  _|_|  _|        _|_|    _|
+ _|  _|  _|  _|        _|  _|  _|
+ _|      _|  _|        _|    _|_|
+ _|      _|    _|_|_|  _|      _|
+
+${AnsiColor.BRIGHT_GREEN} :: Spring Boot :: ${AnsiColor.DEFAULT}    ${spring-boot.formatted-version}
+${AnsiColor.BRIGHT_GREEN} :: MCN :: ${AnsiColor.DEFAULT}    (${shine.version})
