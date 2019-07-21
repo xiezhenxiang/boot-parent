@@ -26,6 +26,7 @@ public class KgEditUtil {
     private List<Document> parentSonLs = new ArrayList<>();
     private List<Document> attrSummaryLs = new ArrayList<>();
     private List<Document> attrObjectLs = new ArrayList<>();
+    private List<Document> attrPrivateObjectLs = new ArrayList<>();
     private List<Document> attrStringLs = new ArrayList<>();
     private List<Document> attrFloatLs = new ArrayList<>();
     private List<Document> attrIntegerLs = new ArrayList<>();
@@ -131,7 +132,7 @@ public class KgEditUtil {
     /**
      * 添加数值属性数据
      **/
-    public void addBasicAttr(long conceptId, long entityId, int attrId, Object value, int type) {
+    public void addBasicData(long conceptId, long entityId, int attrId, Object value, int type) {
 
         Document doc = new Document("entity_id", entityId).append("attr_id", attrId);
         attrSummaryLs.add(doc);
@@ -167,16 +168,27 @@ public class KgEditUtil {
     /**
      * 添加关系属性数据
      */
-    public void addRelationAttr(long conceptId, long entityId, int attrId, long valueConceptId, long value){
+    public void addRelation(long conceptId, long entityId, int attrId, long valueConceptId, long value){
 
-        addSideAttr(conceptId, entityId, attrId, valueConceptId, value, null, null, null);
+        addSideRelation(conceptId, entityId, attrId, valueConceptId, value, null, null, null);
+    }
+
+    /**
+     * 添加私有关系
+     * @author xiezhenxiang 2019/7/21
+     **/
+    public void addPrivateRelation(long conceptId, long entityId, String attrName, long valueConceptId, long value) {
+
+        Document doc = new Document("entity_id", entityId).append("entity_type", conceptId)
+                .append("attr_name", attrName).append("attr_value", value).append("attr_value_type", valueConceptId);
+        attrPrivateObjectLs.add(doc);
     }
 
     /**
      * 添加关系属性数据（带边属性）
      * @author xiezhenxiang 2019/7/15
      **/
-    public void addSideAttr(long conceptId, long entityId, int attrId, long valueConceptId, long value,
+    public void addSideRelation(long conceptId, long entityId, int attrId, long valueConceptId, long value,
                             List<Integer> sideAttrIds, List<Integer> sideAttrTypes, List<Object> sideAttrValues) {
 
         Document doc = new Document("entity_id", entityId).append("entity_type", conceptId).append("attr_id", attrId)
@@ -266,6 +278,10 @@ public class KgEditUtil {
         if (attrObjectLs.size() > 0) {
             MongoUtil.upsertMany(kgDbName, "attribute_object", attrObjectLs, true,"entity_id", "attr_id", "attr_value");
             attrObjectLs.clear();
+        }
+        if (attrPrivateObjectLs.size() > 0) {
+            MongoUtil.upsertMany(kgDbName, "attribute_private_object", attrPrivateObjectLs, true,"entity_id", "attr_name", "attr_value");
+            attrPrivateObjectLs.clear();
         }
         if (attrStringLs.size() > 0) {
             MongoUtil.insertMany(kgDbName, "attribute_string", attrStringLs);
