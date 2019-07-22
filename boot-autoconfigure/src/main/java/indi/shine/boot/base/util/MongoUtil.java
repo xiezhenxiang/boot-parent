@@ -46,9 +46,11 @@ class MongoUtil {
         sort = sort == null ? new Document() : sort;
 
         FindIterable<Document> findIterable = client.getDatabase(db).getCollection(col).find(query).sort(sort);
-        if(pageNo != null && pageSize != null) {
+        if(pageNo != null) {
             pageNo = (pageNo - 1) * pageSize;
             findIterable.skip(pageNo);
+        }
+        if (pageSize != null) {
             findIterable.limit(pageSize);
         }
         mongoCursor = findIterable.noCursorTimeout(true).iterator();
@@ -136,16 +138,20 @@ class MongoUtil {
         client.getDatabase(db).getCollection(col).deleteMany(query);
     }
 
-    public static void createIndex(String db, String col, List<Document> index) {
+    public static void createIndex(String db, String col, Document... indexArr) {
 
         getMongoClient();
-
-        if (index.isEmpty()) {
-            return;
+        for (Document index : indexArr) {
+            client.getDatabase(db).getCollection(col).createIndex(index);
         }
+    }
 
-        List<IndexModel> ls = index.stream().map(IndexModel::new).collect(toList());
-        client.getDatabase(db).getCollection(col).createIndexes(ls);
+    public static void dropIndex(String db, String col, Document... indexArr) {
+
+        getMongoClient();
+        for (Document index : indexArr) {
+            client.getDatabase(db).getCollection(col).dropIndex(index);
+        }
     }
 
 
@@ -163,7 +169,7 @@ class MongoUtil {
 
         List<Document> indexLs = getIndex(fromDbName, fromColName);
         // 复制索引
-        createIndex(toDbName, toColName, indexLs);
+        createIndex(toDbName, toColName, (Document[]) indexLs.toArray());
         // 一万条批量插入
         int pageNo = 1, pageSize = 10000;
         while (true) {
