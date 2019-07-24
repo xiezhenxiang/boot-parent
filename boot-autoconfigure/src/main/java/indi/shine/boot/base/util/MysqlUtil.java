@@ -111,16 +111,16 @@ class MysqlUtil {
             if (con == null || con.isClosed()) {
                 synchronized (MysqlUtil.class) {
                     if (con == null || con.isClosed()) {
-                        try {
-                            Class.forName("com.mysql.cj.jdbc.Driver");
-                            con = DriverManager.getConnection(URL, USERNAME, PASSWORD);
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                        String className = "com.mysql.jdbc.Driver";
+                        if (URL.contains("jdbc:dm:")) {
+                            className = "dm.jdbc.driver.DmDriver";
                         }
+                        Class.forName(className);
+                        con = DriverManager.getConnection(URL, USERNAME, PASSWORD);
                     }
                 }
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return con;
