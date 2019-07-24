@@ -1,10 +1,9 @@
 package indi.shine.boot.base.util;
 
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.google.common.collect.Lists;
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -49,7 +48,7 @@ class MysqlUtil {
      **/
     public static List<JSONObject> executeQuery(String sql, Object... params){
         getConnection();
-        List<JSONObject> ls = Lists.newArrayList();
+        List<JSONObject> ls = new ArrayList<>();
         PreparedStatement statement;
         try {
             int index = 1;
@@ -85,7 +84,7 @@ class MysqlUtil {
      **/
     public static boolean insertSelective(String tbName, JSONObject bean) {
         String sql = "insert into " + tbName + " (";
-        List<Object> values = Lists.newArrayList();
+        List<Object> values = new ArrayList<>();
         for (Map.Entry<String, Object> entry : bean.entrySet()) {
             if (entry.getValue() != null) {
                 sql += entry.getKey() + ", ";
