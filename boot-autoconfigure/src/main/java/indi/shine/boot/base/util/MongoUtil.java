@@ -23,8 +23,8 @@ import static java.util.stream.Collectors.toList;
  */
 class MongoUtil {
 
-    private static final String MONGODB_URL = "127.0.0.1";
-    private static final int MONGODB_PORT = 27017;
+    private static final String MONGODB_URL = "192.168.4.11";
+    private static final int MONGODB_PORT = 19130;
     private volatile static MongoClient client = null;
 
 

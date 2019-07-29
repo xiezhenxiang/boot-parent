@@ -10,10 +10,10 @@ import java.util.List;
 /**
  * @author xiezhenxiang 2019/6/24
  */
-public class KgEditUtil {
+public class KgBuilderUtil {
 
     private String kgDbName;
-    public KgEditUtil(String kgName) {
+    public KgBuilderUtil(String kgName) {
         kgDbName = getKgDbName(kgName);
     }
 
