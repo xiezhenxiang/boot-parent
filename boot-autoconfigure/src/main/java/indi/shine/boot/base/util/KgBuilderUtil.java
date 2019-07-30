@@ -1,11 +1,11 @@
 package indi.shine.boot.base.util;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.mongodb.client.MongoCursor;
 import org.bson.Document;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author xiezhenxiang 2019/6/24
@@ -78,6 +78,46 @@ public class KgBuilderUtil {
                 .append("modify_time", time).append("modifier", "admin");
 
         attrDefineLs.add(doc);
+    }
+
+    /**
+     * 创建边属性定义
+     **/
+    public Integer createSideAttrDefine(String name, Integer type, Integer dataType, String range, Integer relationAttrId) {
+
+        Document attr;
+        Optional<Document> opt = attrDefineLs.stream().filter(s -> s.getInteger("id").equals(relationAttrId)).findFirst();
+
+        if (opt.isPresent()) {
+            attr = opt.get();
+        } else {
+            String defineColName = kgDbName + "_attribute_definition";
+            attr = MongoUtil.find("kg_attribute_definition", defineColName, new Document("id", relationAttrId)).next();
+        }
+        List<JSONObject> extraInfo = new ArrayList<>();
+        Integer attrId = 1;
+        if (attr.containsKey("extra_info")) {
+            extraInfo = JSONArray.parseArray(attr.getString("extra_info"), JSONObject.class);
+            Optional<JSONObject> opt2 = extraInfo.stream().max(Comparator.comparingInt(s -> s.getInteger("seqNo")));
+            if (opt2.isPresent()) {
+                attrId = opt2.get().getInteger("seqNo") + 1;
+            }
+        }
+        JSONObject obj = new JSONObject();
+        obj.fluentPut("seqNo", attrId).fluentPut("name", name).fluentPut("type", type).fluentPut("indexed", 0);
+
+        if (dataType != null) {
+            obj.put("dataType", dataType);
+        }
+
+        if (range != null) {
+            obj.put("objRange", range);
+        }
+        extraInfo.add(obj);
+        attr.append("extra_info", extraInfo);
+
+        attrDefineLs.add(attr);
+        return attrId;
     }
 
     /**
@@ -264,7 +304,7 @@ public class KgBuilderUtil {
         }
         if (!attrDefineLs.isEmpty()) {
             String colName = kgDbName + "_attribute_definition";
-            MongoUtil.insertMany("kg_attribute_definition", colName, attrDefineLs);
+            MongoUtil.upsertMany("kg_attribute_definition", colName, attrDefineLs, true, "id");
             attrDefineLs.clear();
         }
         if (parentSonLs.size() > 0) {
