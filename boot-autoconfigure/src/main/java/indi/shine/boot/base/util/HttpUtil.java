@@ -51,7 +51,7 @@ public final class HttpUtil {
     }
 
 
-    private static String sendGet(String url, Map<String, String> head, String proxyHost) {
+    public static String sendGet(String url, Map<String, String> head, String proxyHost) {
         url = getHttpUrl(url);
         String result = "";
         try {
@@ -77,6 +77,10 @@ public final class HttpUtil {
             logger.error("Http Get请求异常 " + e);
         }
         return result;
+    }
+
+    public static String sendGet(String url, Map<String, String> head) {
+        return sendGet(url, head, null);
     }
 
     public static String sendGet(String url) {
