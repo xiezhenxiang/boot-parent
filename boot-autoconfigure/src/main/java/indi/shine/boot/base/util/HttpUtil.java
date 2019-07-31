@@ -27,6 +27,7 @@ public final class HttpUtil {
     }
 
     private static HttpURLConnection openConnection(String url, String proxyHost) throws IOException {
+
         URL realUrl = new URL(url);
         URLConnection conn;
         if(StringUtil.verify(proxyHost)){
@@ -52,6 +53,7 @@ public final class HttpUtil {
 
 
     public static String sendGet(String url, Map<String, String> head, String proxyHost) {
+
         url = getHttpUrl(url);
         String result = "";
         try {
@@ -65,7 +67,7 @@ public final class HttpUtil {
             connection.setRequestMethod("GET");
             int responseCode = connection.getResponseCode();
             if (responseCode == 200) {
-                result = inputStreamTOString(connection.getInputStream(), ENCODE);
+                result = inputStreamTOString(connection.getInputStream());
             }else{
                 logger.info("url: {}", url);
                 logger.info("Http Get请求无结果，响应码为：{}", responseCode);
@@ -80,18 +82,22 @@ public final class HttpUtil {
     }
 
     public static String sendGet(String url, Map<String, String> head) {
+
         return sendGet(url, head, null);
     }
 
     public static String sendGet(String url) {
+
         return sendGet(url,null,null);
     }
 
     public static String sendGet(String url, String proxyHost) {
+
         return sendGet(url,null, proxyHost);
     }
 
     private static String sendPost(String url, Map<String, String> head, Map<String, Object> formPara, String jsonPara) {
+
         String result = "";
         try {
             HttpURLConnection conn = openConnection(url, null);
@@ -119,7 +125,7 @@ public final class HttpUtil {
 
             int responseCode = conn.getResponseCode();
             if (responseCode == 200) {
-                result = inputStreamTOString(conn.getInputStream(), ENCODE);
+                result = inputStreamTOString(conn.getInputStream());
             }else {
                 logger.info("url: {}", url);
                 logger.info("Http Post请求获取不到源码，响应码为：{}", responseCode);
@@ -132,16 +138,19 @@ public final class HttpUtil {
     }
 
     public static String sendPost(String url, Map<String, String> head, Map<String, Object> formPara) {
+
         return sendPost(url, head, formPara, null);
     }
 
     public static String sendPost(String url, Map<String, String> head, String jsonPara) {
+
         return sendPost(url, head, null, jsonPara);
     }
 
 
 
     private static String parseParam(Map<String, Object> param) {
+
         List<String> list = new ArrayList<>();
         param.forEach((k, v) -> {
             list.add(k + "=" + v);
@@ -158,6 +167,7 @@ public final class HttpUtil {
     }
 
     private static String getHttpUrl(String str) {
+
         try {
             str = URLEncoder.encode(str, ENCODE).replace("%3A", ":")
                     .replaceAll("%2F", "/")
@@ -169,13 +179,15 @@ public final class HttpUtil {
         return str;
     }
 
-    private static String inputStreamTOString(InputStream in,String encoding) throws Exception{
+    private static String inputStreamTOString(InputStream in) throws Exception{
 
         ByteArrayOutputStream outStream = new ByteArrayOutputStream();
         byte[] data = new byte[4096 * 4];
         int count;
-        while((count = in.read(data,0,4096 * 4)) != -1)
+
+        while ((count = in.read(data,0,4096 * 4)) != -1) {
             outStream.write(data, 0, count);
-        return new String(outStream.toByteArray(), encoding);
+        }
+        return new String(outStream.toByteArray(), ENCODE);
     }
 }

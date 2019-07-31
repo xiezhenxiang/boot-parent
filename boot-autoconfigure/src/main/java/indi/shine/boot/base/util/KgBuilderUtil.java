@@ -1,5 +1,6 @@
 package indi.shine.boot.base.util;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.mongodb.client.MongoCursor;
@@ -114,7 +115,7 @@ public class KgBuilderUtil {
             obj.put("objRange", range);
         }
         extraInfo.add(obj);
-        attr.append("extra_info", extraInfo);
+        attr.append("extra_info", JSON.toJSONString(extraInfo));
 
         attrDefineLs.add(attr);
         return attrId;
@@ -308,7 +309,7 @@ public class KgBuilderUtil {
             attrDefineLs.clear();
         }
         if (parentSonLs.size() > 0) {
-            MongoUtil.insertMany(kgDbName, "parent_son", parentSonLs);
+            MongoUtil.upsertMany(kgDbName, "parent_son", parentSonLs, true, "parent", "son");
             parentSonLs.clear();
         }
         if (attrSummaryLs.size() > 0) {
