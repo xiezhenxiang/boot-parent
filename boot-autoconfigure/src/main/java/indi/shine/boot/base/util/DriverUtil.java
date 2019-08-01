@@ -1,6 +1,7 @@
 package indi.shine.boot.base.util;
 
 import com.alibaba.fastjson.JSONObject;
+import indi.shine.boot.base.exception.ServiceException;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -50,7 +51,6 @@ public class DriverUtil {
             ls = find("show tables").stream().map(s -> s.getString("tab_name")).collect(Collectors.toList());
         } else {
             String dbName =url.substring(url.lastIndexOf("/") + 1, url.lastIndexOf("?"));
-            String infoMysqlUrl = url.replaceAll(dbName, "information_schema");
             String sql = "select TABLE_NAME, TABLE_COMMENT from TABLES where TABLE_SCHEMA = ?";
             ls = find(sql, dbName).stream().map(s -> s.getString("TABLE_NAME")).collect(Collectors.toList());
         }
@@ -176,6 +176,7 @@ public class DriverUtil {
                             con = DriverManager.getConnection(url, userName, pwd);
                         } catch (Exception e) {
                             e.printStackTrace();
+                            throw ServiceException.newInstance(50050, "datasource connect error!");
                         }
                         pool.put(key, con);
                     }
