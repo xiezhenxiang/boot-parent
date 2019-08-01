@@ -4,15 +4,30 @@ import com.alibaba.fastjson.JSONObject;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-class MysqlUtil {
+public class DriverUtil {
 
-    private static final String URL = "jdbc:mysql://127.0.0.1:3306/mysql?serverTimezone=UTC&characterEncoding=utf8&autoReconnect=true&useSSL=false";
-    private static final String USERNAME = "root";
-    private static final String PASSWORD = "root";
-    private volatile static Connection con = null;
+    private String url;
+    private String userName;
+    private String pwd;
+    private volatile Connection con = null;
+    private volatile static Map<Integer, Connection> pool = new HashMap<>(10);
+
+    public static DriverUtil getClient(String url, String userName, String pwd ) {
+
+        return new DriverUtil(url, userName, pwd);
+    }
+
+    private DriverUtil(String url, String userName, String pwd) {
+
+        this.url = url;
+        this.userName = userName;
+        this.pwd = pwd;
+    }
+
 
     /**
      * 增删改
@@ -20,8 +35,9 @@ class MysqlUtil {
      * @param sql sql语句
      * @param params 参数
      **/
-    public static boolean executeUpdate(String sql, Object... params) {
-        getConnection();
+    public boolean executeUpdate(String sql, Object... params) {
+
+        initConnection();
         PreparedStatement statement;
         int result = 0;
         try {
@@ -46,8 +62,9 @@ class MysqlUtil {
      * @param sql sql语句
      * @param params 参数
      **/
-    public static List<JSONObject> executeQuery(String sql, Object... params){
-        getConnection();
+    public List<JSONObject> executeQuery(String sql, Object... params){
+
+        initConnection();
         List<JSONObject> ls = new ArrayList<>();
         PreparedStatement statement;
         try {
@@ -82,7 +99,8 @@ class MysqlUtil {
      * @param tbName 表名
      * @param bean 数据
      **/
-    public static boolean insertSelective(String tbName, JSONObject bean) {
+    public boolean insertSelective(String tbName, JSONObject bean) {
+
         String sql = "insert into " + tbName + " (";
         List<Object> values = new ArrayList<>();
         for (Map.Entry<String, Object> entry : bean.entrySet()) {
@@ -105,23 +123,48 @@ class MysqlUtil {
     }
 
 
-    private static Connection getConnection() {
-        try {
-            if (con == null || con.isClosed()) {
-                synchronized (MysqlUtil.class) {
-                    if (con == null || con.isClosed()) {
+    private void initConnection() {
+
+        if (con == null) {
+            synchronized (DriverUtil.class) {
+
+                if (con == null) {
+
+                    Integer key = elfHash(url);
+                    if (pool.containsKey(key)) {
+                        con = pool.get(key);
+                    } else {
                         String className = "com.mysql.jdbc.Driver";
-                        if (URL.contains("jdbc:dm:")) {
+                        if (url.contains("jdbc:dm:")) {
                             className = "dm.jdbc.driver.DmDriver";
                         }
-                        Class.forName(className);
-                        con = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+                        try {
+                            Class.forName(className);
+                            con = DriverManager.getConnection(url, userName, pwd);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        pool.put(key, con);
                     }
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
-        return con;
     }
+
+    private Integer elfHash(String str) {
+
+        int hash = 0;
+
+        for (int i = 0; i < str.length(); i ++) {
+
+            hash = (hash << 4) + str.charAt(i);
+            long x = hash & 0xf0000000L;
+            if (x != 0) {
+                hash ^= (x >> 24);
+                hash &= ~x;
+            }
+        }
+        return (hash & 0x7FFFFFFF);
+    }
+
 }
