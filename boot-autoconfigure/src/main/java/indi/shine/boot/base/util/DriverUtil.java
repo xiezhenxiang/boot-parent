@@ -1,19 +1,47 @@
 package indi.shine.boot.base.util;
 
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.google.common.collect.Lists;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-class MysqlUtil {
+import static indi.shine.boot.base.util.AlgorithmUtil.elfHash;
 
-    private static final String URL = "jdbc:mysql://127.0.0.1:3306/mysql?serverTimezone=UTC&characterEncoding=utf8&autoReconnect=true&useSSL=false";
-    private static final String USERNAME = "root";
-    private static final String PASSWORD = "root";
-    private volatile static Connection con = null;
+/**
+ * support mysql, hive, dm
+ * @author xiezhenxiang 2019/8/1
+ **/
+public class DriverUtil {
+
+    private String url;
+    private String userName;
+    private String pwd;
+    private volatile Connection con;
+    private volatile static Map<Integer, Connection> pool = new HashMap<>(10);
+
+    public static DriverUtil getInstance(String url, String userName, String pwd ) {
+
+        return new DriverUtil(url, userName, pwd);
+    }
+
+    public static DriverUtil getMysqlInstance(String ip, Integer port, String database, String userName, String pwd) {
+
+        String url = "jdbc:mysql://" + ip + ":" + port + "/"  + database
+                + "?serverTimezone=UTC&characterEncoding=utf8&autoReconnect=true&failOverReadOnly=false&useSSL=false";
+        return new DriverUtil(url, userName, pwd);
+    }
+
+    private DriverUtil(String url, String userName, String pwd) {
+
+        this.url = url;
+        this.userName = userName;
+        this.pwd = pwd;
+        initConnection();
+    }
+
 
     /**
      * 增删改
@@ -21,8 +49,8 @@ class MysqlUtil {
      * @param sql sql语句
      * @param params 参数
      **/
-    public static boolean executeUpdate(String sql, Object... params) {
-        getConnection();
+    public boolean update(String sql, Object... params) {
+
         PreparedStatement statement;
         int result = 0;
         try {
@@ -47,9 +75,9 @@ class MysqlUtil {
      * @param sql sql语句
      * @param params 参数
      **/
-    public static List<JSONObject> executeQuery(String sql, Object... params){
-        getConnection();
-        List<JSONObject> ls = Lists.newArrayList();
+    public List<JSONObject> find(String sql, Object... params){
+
+        List<JSONObject> ls = new ArrayList<>();
         PreparedStatement statement;
         try {
             int index = 1;
@@ -77,15 +105,20 @@ class MysqlUtil {
         return ls;
     }
 
+    public JSONObject findOne(String sql, Object... params){
+
+        List<JSONObject> ls = find(sql, params);
+        return ls.isEmpty() ? new JSONObject() : ls.get(0);
+    }
+
     /**
-     * @desc 插入数据
+     * 插入数据
      * @author xiezhenxiang 2019/6/1
-     * @param tbName 表名
-     * @param bean 数据
      **/
-    public static boolean insertSelective(String tbName, JSONObject bean) {
+    public boolean insertSelective(String tbName, JSONObject bean) {
+
         String sql = "insert into " + tbName + " (";
-        List<Object> values = Lists.newArrayList();
+        List<Object> values = new ArrayList<>();
         for (Map.Entry<String, Object> entry : bean.entrySet()) {
             if (entry.getValue() != null) {
                 sql += entry.getKey() + ", ";
@@ -101,28 +134,39 @@ class MysqlUtil {
         } else {
             return true;
         }
-        executeUpdate(sql, values.toArray());
+        update(sql, values.toArray());
         return true;
     }
 
 
-    private static Connection getConnection() {
-        try {
-            if (con == null || con.isClosed()) {
-                synchronized (MysqlUtil.class) {
-                    if (con == null || con.isClosed()) {
+    private void initConnection() {
+
+        if (con == null) {
+
+            synchronized (DriverUtil.class) {
+
+                if (con == null) {
+                    Integer key = elfHash(url);
+                    if (pool.containsKey(key)) {
+                        con = pool.get(key);
+                    } else {
+                        String className = "com.mysql.jdbc.Driver";
+                        if (url.contains("jdbc:dm:")) {
+                            className = "dm.jdbc.driver.DmDriver";
+                        } else if (url.contains("jdbc:hive")) {
+                            className = "org.apache.hive.jdbc.HiveDriver";
+                        }
                         try {
-                            Class.forName("com.mysql.cj.jdbc.Driver");
-                            con = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+                            Class.forName(className);
+                            con = DriverManager.getConnection(url, userName, pwd);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
+                        pool.put(key, con);
                     }
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
-        return con;
     }
+
 }
