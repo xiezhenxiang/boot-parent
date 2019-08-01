@@ -120,8 +120,10 @@ public class DriverUtil {
             ls = find("show tables").stream().map(s -> s.getString("tab_name")).collect(Collectors.toList());
         } else {
             String dbName =url.substring(url.lastIndexOf("/") + 1, url.lastIndexOf("?"));
+            String infoMysqlUrl = url.replaceAll(dbName, "information_schema");
+            DriverUtil infoMysqlUtil = getInstance(infoMysqlUrl, userName, pwd);
             String sql = "select TABLE_NAME, TABLE_COMMENT from TABLES where TABLE_SCHEMA = ?";
-            ls = find(sql, dbName).stream().map(s -> s.getString("TABLE_NAME")).collect(Collectors.toList());
+            ls = infoMysqlUtil.find(sql, dbName).stream().map(s -> s.getString("TABLE_NAME")).collect(Collectors.toList());
         }
         return ls;
     }
@@ -184,5 +186,4 @@ public class DriverUtil {
             }
         }
     }
-
 }
