@@ -8,16 +8,29 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static indi.shine.boot.base.util.AlgorithmUtil.elfHash;
+
+/**
+ * support mysql, hive, dm
+ * @author xiezhenxiang 2019/8/1
+ **/
 public class DriverUtil {
 
     private String url;
     private String userName;
     private String pwd;
-    private volatile Connection con = null;
+    private volatile Connection con;
     private volatile static Map<Integer, Connection> pool = new HashMap<>(10);
 
-    public static DriverUtil getClient(String url, String userName, String pwd ) {
+    public static DriverUtil getInstance(String url, String userName, String pwd ) {
 
+        return new DriverUtil(url, userName, pwd);
+    }
+
+    public static DriverUtil getMysqlInstance(String ip, Integer port, String database, String userName, String pwd) {
+
+        String url = "jdbc:mysql://" + ip + ":" + port + "/"  + database
+                + "?serverTimezone=UTC&characterEncoding=utf8&autoReconnect=true&failOverReadOnly=false&useSSL=false";
         return new DriverUtil(url, userName, pwd);
     }
 
@@ -26,6 +39,7 @@ public class DriverUtil {
         this.url = url;
         this.userName = userName;
         this.pwd = pwd;
+        initConnection();
     }
 
 
@@ -35,9 +49,8 @@ public class DriverUtil {
      * @param sql sql语句
      * @param params 参数
      **/
-    public boolean executeUpdate(String sql, Object... params) {
+    public boolean update(String sql, Object... params) {
 
-        initConnection();
         PreparedStatement statement;
         int result = 0;
         try {
@@ -62,9 +75,8 @@ public class DriverUtil {
      * @param sql sql语句
      * @param params 参数
      **/
-    public List<JSONObject> executeQuery(String sql, Object... params){
+    public List<JSONObject> find(String sql, Object... params){
 
-        initConnection();
         List<JSONObject> ls = new ArrayList<>();
         PreparedStatement statement;
         try {
@@ -93,11 +105,15 @@ public class DriverUtil {
         return ls;
     }
 
+    public JSONObject findOne(String sql, Object... params){
+
+        List<JSONObject> ls = find(sql, params);
+        return ls.isEmpty() ? new JSONObject() : ls.get(0);
+    }
+
     /**
-     * @desc 插入数据
+     * 插入数据
      * @author xiezhenxiang 2019/6/1
-     * @param tbName 表名
-     * @param bean 数据
      **/
     public boolean insertSelective(String tbName, JSONObject bean) {
 
@@ -118,7 +134,7 @@ public class DriverUtil {
         } else {
             return true;
         }
-        executeUpdate(sql, values.toArray());
+        update(sql, values.toArray());
         return true;
     }
 
@@ -126,10 +142,10 @@ public class DriverUtil {
     private void initConnection() {
 
         if (con == null) {
+
             synchronized (DriverUtil.class) {
 
                 if (con == null) {
-
                     Integer key = elfHash(url);
                     if (pool.containsKey(key)) {
                         con = pool.get(key);
@@ -137,6 +153,8 @@ public class DriverUtil {
                         String className = "com.mysql.jdbc.Driver";
                         if (url.contains("jdbc:dm:")) {
                             className = "dm.jdbc.driver.DmDriver";
+                        } else if (url.contains("jdbc:hive")) {
+                            className = "org.apache.hive.jdbc.HiveDriver";
                         }
                         try {
                             Class.forName(className);
@@ -149,22 +167,6 @@ public class DriverUtil {
                 }
             }
         }
-    }
-
-    private Integer elfHash(String str) {
-
-        int hash = 0;
-
-        for (int i = 0; i < str.length(); i ++) {
-
-            hash = (hash << 4) + str.charAt(i);
-            long x = hash & 0xf0000000L;
-            if (x != 0) {
-                hash ^= (x >> 24);
-                hash &= ~x;
-            }
-        }
-        return (hash & 0x7FFFFFFF);
     }
 
 }
