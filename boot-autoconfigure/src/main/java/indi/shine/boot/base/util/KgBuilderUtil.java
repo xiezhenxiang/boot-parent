@@ -17,6 +17,8 @@ public class KgBuilderUtil {
     public KgBuilderUtil(String kgName) {
         kgDbName = getKgDbName(kgName);
     }
+    
+    MongoUtil mongoUtil;
 
     private List<Document> entityIdLs = new ArrayList<>();
     private List<Document> abstractLs = new ArrayList<>();
@@ -93,7 +95,7 @@ public class KgBuilderUtil {
             attr = opt.get();
         } else {
             String defineColName = kgDbName + "_attribute_definition";
-            attr = MongoUtil.find("kg_attribute_definition", defineColName, new Document("id", relationAttrId)).next();
+            attr = mongoUtil.find("kg_attribute_definition", defineColName, new Document("id", relationAttrId)).next();
         }
         List<JSONObject> extraInfo = new ArrayList<>();
         Integer attrId = 1;
@@ -241,11 +243,11 @@ public class KgBuilderUtil {
             if (sideAttrTypes.get(i) == 0) {
                 doc.append("attr_ext_" + attrId + "_" + sideAttrIds.get(i), sideAttrValues.get(i));
             } else {
-                MongoUtil.insertOne(kgDbName, "attribute_object", doc);
+                mongoUtil.insertOne(kgDbName, "attribute_object", doc);
                 Document objExt = new Document("triple_id", doc.get("_id").toString())
                         .append("attr_id", attrId + "_" + sideAttrIds.get(i))
                         .append("ext_id", sideAttrValues.get(i));
-                MongoUtil.insertOne(kgDbName, "attribute_object_ext", objExt);
+                mongoUtil.insertOne(kgDbName, "attribute_object_ext", objExt);
                 flag = false;
             }
         }
@@ -265,7 +267,7 @@ public class KgBuilderUtil {
         if (!basicInfoLs.isEmpty()) {
             id = basicInfoLs.get(basicInfoLs.size() - 1).getLong("_id") + 1;
         } else {
-             MongoCursor<Document> cursor = MongoUtil.find(kgDbName, "basic_info", null, new Document("_id", -1), 1, 1);
+             MongoCursor<Document> cursor = mongoUtil.find(kgDbName, "basic_info", null, new Document("_id", -1), 1, 1);
              if (cursor.hasNext()) {
                  id = cursor.next().getLong("_id") + 1;
              }
@@ -280,7 +282,7 @@ public class KgBuilderUtil {
             id = attrDefineLs.get(attrDefineLs.size() - 1).getInteger("id") + 1;
         } else {
             String defineColName = kgDbName + "_attribute_definition";
-            MongoCursor<Document> cursor = MongoUtil.find("kg_attribute_definition", defineColName, null, new Document("_id", -1), 1, 1);
+            MongoCursor<Document> cursor = mongoUtil.find("kg_attribute_definition", defineColName, null, new Document("_id", -1), 1, 1);
             if (cursor.hasNext()) {
                 id = cursor.next().getInteger("id") + 1;
             }
@@ -292,68 +294,68 @@ public class KgBuilderUtil {
     public void bulkInsert(){
 
         if (entityIdLs.size() > 0) {
-            MongoUtil.insertMany(kgDbName, "entity_id", entityIdLs);
+            mongoUtil.insertMany(kgDbName, "entity_id", entityIdLs);
             entityIdLs.clear();
         }
         if (basicInfoLs.size() > 0) {
-            MongoUtil.insertMany(kgDbName, "basic_info", basicInfoLs);
+            mongoUtil.insertMany(kgDbName, "basic_info", basicInfoLs);
             basicInfoLs.clear();
         }
         if (!abstractLs.isEmpty()) {
-            MongoUtil.insertMany(kgDbName, "entity_abstract", abstractLs);
+            mongoUtil.insertMany(kgDbName, "entity_abstract", abstractLs);
             abstractLs.clear();
         }
         if (!attrDefineLs.isEmpty()) {
             String colName = kgDbName + "_attribute_definition";
-            MongoUtil.upsertMany("kg_attribute_definition", colName, attrDefineLs, true, "id");
+            mongoUtil.upsertMany("kg_attribute_definition", colName, attrDefineLs, true, "id");
             attrDefineLs.clear();
         }
         if (parentSonLs.size() > 0) {
-            MongoUtil.upsertMany(kgDbName, "parent_son", parentSonLs, true, "parent", "son");
+            mongoUtil.upsertMany(kgDbName, "parent_son", parentSonLs, true, "parent", "son");
             parentSonLs.clear();
         }
         if (attrSummaryLs.size() > 0) {
-            MongoUtil.insertMany(kgDbName, "attribute_summary", attrSummaryLs);
+            mongoUtil.insertMany(kgDbName, "attribute_summary", attrSummaryLs);
             attrSummaryLs.clear();
         }
         if (attrObjectLs.size() > 0) {
-            MongoUtil.upsertMany(kgDbName, "attribute_object", attrObjectLs, true,"entity_id", "attr_id", "attr_value");
+            mongoUtil.upsertMany(kgDbName, "attribute_object", attrObjectLs, true,"entity_id", "attr_id", "attr_value");
             attrObjectLs.clear();
         }
         if (attrPrivateObjectLs.size() > 0) {
-            MongoUtil.upsertMany(kgDbName, "attribute_private_object", attrPrivateObjectLs, true,"entity_id", "attr_name", "attr_value");
+            mongoUtil.upsertMany(kgDbName, "attribute_private_object", attrPrivateObjectLs, true,"entity_id", "attr_name", "attr_value");
             attrPrivateObjectLs.clear();
         }
         if (attrStringLs.size() > 0) {
-            MongoUtil.insertMany(kgDbName, "attribute_string", attrStringLs);
+            mongoUtil.insertMany(kgDbName, "attribute_string", attrStringLs);
             attrStringLs.clear();
         }
         if (attrFloatLs.size() > 0) {
-            MongoUtil.insertMany(kgDbName, "attribute_float", attrFloatLs);
+            mongoUtil.insertMany(kgDbName, "attribute_float", attrFloatLs);
             attrFloatLs.clear();
         }
         if (attrIntegerLs.size() > 0) {
-            MongoUtil.insertMany(kgDbName, "attribute_integer", attrIntegerLs);
+            mongoUtil.insertMany(kgDbName, "attribute_integer", attrIntegerLs);
             attrIntegerLs.clear();
         }
         if (attrDateLs.size() > 0) {
-            MongoUtil.insertMany(kgDbName, "attribute_date_time", attrDateLs);
+            mongoUtil.insertMany(kgDbName, "attribute_date_time", attrDateLs);
             attrDateLs.clear();
         }
         if (entityImageLs.size() > 0) {
-            MongoUtil.insertMany(kgDbName, "entity_image", entityImageLs);
+            mongoUtil.insertMany(kgDbName, "entity_image", entityImageLs);
             entityImageLs.clear();
         }
         if (conceptInstanceLs.size() > 0) {
-            MongoUtil.insertMany(kgDbName, "concept_instance", conceptInstanceLs);
+            mongoUtil.insertMany(kgDbName, "concept_instance", conceptInstanceLs);
             conceptInstanceLs.clear();
         }
         if (synonymousLs.size() > 0) {
-            MongoUtil.insertMany(kgDbName, "entity_synonym", synonymousLs);
+            mongoUtil.insertMany(kgDbName, "entity_synonym", synonymousLs);
             synonymousLs.clear();
         }
         if (attrTextLs.size() > 0) {
-            MongoUtil.insertMany(kgDbName, "attribute_text", attrTextLs);
+            mongoUtil.insertMany(kgDbName, "attribute_text", attrTextLs);
             attrTextLs.clear();
         }
 
@@ -362,7 +364,7 @@ public class KgBuilderUtil {
     private String getKgDbName(String kgName) {
 
         String kgDbName = null;
-        MongoCursor<Document> cursor = MongoUtil.find("kg_attribute_definition", "kg_db_name", new Document("kg_name", kgName));
+        MongoCursor<Document> cursor = mongoUtil.find("kg_attribute_definition", "kg_db_name", new Document("kg_name", kgName));
         if (cursor.hasNext()) {
             kgDbName = cursor.next().getString("db_name");
         }

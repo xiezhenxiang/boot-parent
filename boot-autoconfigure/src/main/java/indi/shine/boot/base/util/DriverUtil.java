@@ -1,6 +1,7 @@
 package indi.shine.boot.base.util;
 
 import com.alibaba.fastjson.JSONObject;
+import indi.shine.boot.base.exception.ServiceException;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -176,6 +177,7 @@ public class DriverUtil {
                             con = DriverManager.getConnection(url, userName, pwd);
                         } catch (Exception e) {
                             e.printStackTrace();
+                            throw ServiceException.newInstance(50050, "数据库连接失败!");
                         }
                         pool.put(key, con);
                     }
