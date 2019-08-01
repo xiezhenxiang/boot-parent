@@ -187,4 +187,7 @@ public class DriverUtil {
         }
     }
 
+    public Connection getClient() {
+        return con;
+    }
 }
