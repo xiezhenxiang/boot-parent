@@ -6,7 +6,7 @@ import com.mongodb.ServerAddress;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoIterable;
-import com.mongodb.client.model.UpdateOneModel;
+import com.mongodb.client.model.UpdateManyModel;
 import com.mongodb.client.model.UpdateOptions;
 import org.bson.BsonDocument;
 import org.bson.Document;
@@ -101,7 +101,7 @@ public class MongoUtil {
             return;
         }
 
-        List<UpdateOneModel<Document>> requests = ls.stream().map(s -> new UpdateOneModel<Document>(
+        List<UpdateManyModel<Document>> requests = ls.stream().map(s -> new UpdateManyModel<Document>(
                 new Bson() {
                     @Override
                     public <TDocument> BsonDocument toBsonDocument(Class<TDocument> aClass, CodecRegistry codecRegistry) {

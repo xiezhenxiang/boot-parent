@@ -44,21 +44,6 @@ public class DriverUtil {
         initConnection();
     }
 
-    public List<String> getTables() {
-
-        List<String> ls;
-        if (url.contains("jdbc:hive2")) {
-            ls = find("show tables").stream().map(s -> s.getString("tab_name")).collect(Collectors.toList());
-        } else {
-            String dbName =url.substring(url.lastIndexOf("/") + 1, url.lastIndexOf("?"));
-            String infoMysqlUrl = url.replaceAll(dbName, "information_schema");
-            DriverUtil infoMysqlUtil = getInstance(infoMysqlUrl, userName, pwd);
-            String sql = "select TABLE_NAME, TABLE_COMMENT from TABLES where TABLE_SCHEMA = ?";
-            ls = infoMysqlUtil.find(sql, dbName).stream().map(s -> s.getString("TABLE_NAME")).collect(Collectors.toList());
-        }
-        return ls;
-    }
-
 
     /**
      * 增删改
@@ -126,6 +111,21 @@ public class DriverUtil {
 
         List<JSONObject> ls = find(sql, params);
         return ls.isEmpty() ? new JSONObject() : ls.get(0);
+    }
+
+    public List<String> getTables() {
+
+        List<String> ls;
+        if (url.contains("jdbc:hive2")) {
+            ls = find("show tables").stream().map(s -> s.getString("tab_name")).collect(Collectors.toList());
+        } else {
+            String dbName =url.substring(url.lastIndexOf("/") + 1, url.lastIndexOf("?"));
+            String infoMysqlUrl = url.replaceAll(dbName, "information_schema");
+            DriverUtil infoMysqlUtil = getInstance(infoMysqlUrl, userName, pwd);
+            String sql = "select TABLE_NAME, TABLE_COMMENT from TABLES where TABLE_SCHEMA = ?";
+            ls = infoMysqlUtil.find(sql, dbName).stream().map(s -> s.getString("TABLE_NAME")).collect(Collectors.toList());
+        }
+        return ls;
     }
 
     /**
