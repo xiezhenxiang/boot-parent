@@ -8,6 +8,7 @@ import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoIterable;
 import com.mongodb.client.model.UpdateManyModel;
 import com.mongodb.client.model.UpdateOptions;
+import indi.shine.boot.base.exception.ServiceException;
 import org.bson.BsonDocument;
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -199,24 +200,28 @@ public class MongoUtil {
                     if (pool.containsKey(key)) {
                         client = pool.get(key);
                     } else {
+                        try {
+                            MongoClientOptions options = MongoClientOptions.builder()
+                                    .connectionsPerHost(20)
+                                    .minConnectionsPerHost(1)
+                                    .maxConnectionIdleTime(0)
+                                    .maxConnectionLifeTime(0)
+                                    .connectTimeout(30000)
+                                    .socketTimeout(120000)
+                                    .build();
 
-                        MongoClientOptions options = MongoClientOptions.builder()
-                                .connectionsPerHost(20)
-                                .minConnectionsPerHost(1)
-                                .maxConnectionIdleTime(0)
-                                .maxConnectionLifeTime(0)
-                                .connectTimeout(30000)
-                                .socketTimeout(120000)
-                                .build();
+                            String[] ips = ip.split(",");
+                            List<ServerAddress> urlList = new ArrayList<>();
+                            for (String url : ips) {
+                                urlList.add(new ServerAddress(url, port));
+                            }
 
-                        String[] ips = ip.split(",");
-                        List<ServerAddress> urlList = new ArrayList<>();
-                        for (String url : ips) {
-                            urlList.add(new ServerAddress(url, port));
+                            client = new MongoClient(urlList, options);
+                            pool.put(key, client);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            throw ServiceException.newInstance(50051, "mongo connect error!");
                         }
-
-                        client = new MongoClient(urlList, options);
-                        pool.put(key, client);
                     }
                 }
             }
