@@ -163,7 +163,9 @@ public class DriverUtil {
             synchronized (DriverUtil.class) {
 
                 if (con == null) {
-                    Integer key = elfHash(url);
+                    userName = userName == null ? "" : userName;
+                    pwd = pwd == null ? "" : pwd;
+                    Integer key = elfHash(url + userName + pwd);
                     if (pool.containsKey(key)) {
                         con = pool.get(key);
                     } else {
