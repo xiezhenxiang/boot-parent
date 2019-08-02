@@ -222,4 +222,8 @@ public class MongoUtil {
             }
         }
     }
+
+    public MongoClient getClient() {
+        return client;
+    }
 }
