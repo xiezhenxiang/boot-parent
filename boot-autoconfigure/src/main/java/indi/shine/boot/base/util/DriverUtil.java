@@ -176,11 +176,11 @@ public class DriverUtil {
                         try {
                             Class.forName(className);
                             con = DriverManager.getConnection(url, userName, pwd);
+                            pool.put(key, con);
                         } catch (Exception e) {
                             e.printStackTrace();
                             throw ServiceException.newInstance(50050, "datasource connect error!");
                         }
-                        pool.put(key, con);
                     }
                 }
             }
