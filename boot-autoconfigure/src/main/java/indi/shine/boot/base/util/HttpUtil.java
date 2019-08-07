@@ -173,7 +173,7 @@ public final class HttpUtil {
      * 下载网页到本地，包括网页中的静态资源
      * @author xiezhenxiang 2019/8/6
      **/
-    public static void downloadFullHtml(String url, String fileDir, String proxyHost) {
+    public static boolean downloadFullHtml(String url, String fileDir, String proxyHost) {
 
         fileDir = fileDir.replaceAll("\\\\", "/");
         fileDir = fileDir.endsWith("/") ? fileDir : fileDir + "/";
@@ -210,6 +210,8 @@ public final class HttpUtil {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        return html.length() > 0;
     }
 
     public static void downloadFullHtml(String url, String fileDir) {
@@ -235,7 +237,7 @@ public final class HttpUtil {
 
     private static String getHttpUrl(String str) {
 
-        if (!str.contains("%3F") && !str.contains("%3D") && !str.contains("%2F") && !str.contains("%3A")) {
+        if (StringUtil.isChinese(str)) {
             try {
                 str = URLEncoder.encode(str, ENCODE);
             } catch (Exception e) {
