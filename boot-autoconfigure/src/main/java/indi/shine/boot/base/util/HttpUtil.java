@@ -1,13 +1,10 @@
 package indi.shine.boot.base.util;
 
-import com.alibaba.fastjson.JSONObject;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -71,8 +68,6 @@ public final class HttpUtil {
             }else{
                 logger.info("url: {}", url);
                 logger.info("Http Get请求无结果，响应码为：{}", responseCode);
-
-                System.out.println(JSONObject.toJSON(connection.getHeaderFields()).toString());
             }
         } catch (Exception e) {
             logger.info("url: {}", url);
@@ -147,7 +142,79 @@ public final class HttpUtil {
         return sendPost(url, head, null, jsonPara);
     }
 
+    public static InputStream download(String url, String proxyHost) {
 
+        url = getHttpUrl(url);
+        InputStream inputStream = null;
+        try {
+            HttpURLConnection connection = openConnection(url, proxyHost);
+            connection.setDoOutput(false);
+            connection.setRequestMethod("GET");
+            int responseCode = connection.getResponseCode();
+            if (responseCode == 200) {
+                inputStream = connection.getInputStream();
+            }else{
+                logger.info("url: {}", url);
+                logger.info("Http Get请求无结果，响应码为：{}", responseCode);
+            }
+        } catch (Exception e) {
+            logger.info("url: {}", url);
+            logger.error("Http Get请求异常 " + e);
+        }
+        return inputStream;
+    }
+
+
+    public static InputStream download(String url) {
+        return download(url, null);
+    }
+
+    /**
+     * 下载网页到本地，包括网页中的静态资源
+     * @author xiezhenxiang 2019/8/6
+     **/
+    public static void downloadFullHtml(String url, String fileDir, String proxyHost) {
+
+        fileDir = fileDir.replaceAll("\\\\", "/");
+        fileDir = fileDir.endsWith("/") ? fileDir : fileDir + "/";
+        String staticDir = fileDir + "static/";
+        File dir = new File(staticDir);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+
+        String html = sendGet(url, proxyHost);
+        // 去除URL转义
+        html = html.replaceAll("\\\\/", "/");
+        // js <script src // css href /img src
+        String regex = "(?<=\"|')(http)[\\S]*?\\.(css|js|jpg|png|bmp|jpeg|png|gif|CSS|JS|JPG|PNG|BMP|JPEG|PNG|GIF)(?=\"|')";
+        List<String>ls = RegexUtil.subRegex(html, regex);
+
+        try {
+
+            for (String src : ls) {
+
+                InputStream in = download(src);
+                if (in == null) {
+                    continue;
+                }
+                String fileName = src.substring(src.lastIndexOf("/") + 1);
+                FileUtils.copyInputStreamToFile(in, new File(staticDir + fileName));
+                html = html.replaceAll(src, "static/" + fileName);
+            }
+            OutputStream sourceFile = new FileOutputStream(new File(fileDir + "page.html"));
+            byte[] b = html.getBytes(ENCODE);
+            sourceFile.write(b);
+            sourceFile.flush();
+            sourceFile.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void downloadFullHtml(String url, String fileDir) {
+        downloadFullHtml(url, fileDir, null);
+    }
 
     private static String parseParam(Map<String, Object> param) {
 
@@ -168,14 +235,17 @@ public final class HttpUtil {
 
     private static String getHttpUrl(String str) {
 
-        try {
-            str = URLEncoder.encode(str, ENCODE).replace("%3A", ":")
-                    .replaceAll("%2F", "/")
-                    .replaceAll("%3F", "?")
-                    .replaceAll("%3D", "=");
-        }catch (Exception e){
-            e.printStackTrace();
+        if (!str.contains("%3F") && !str.contains("%3D") && !str.contains("%2F") && !str.contains("%3A")) {
+            try {
+                str = URLEncoder.encode(str, ENCODE);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
+        str = str.replace("%3A", ":")
+                .replaceAll("%2F", "/")
+                .replaceAll("%3F", "?")
+                .replaceAll("%3D", "=");
         return str;
     }
 
