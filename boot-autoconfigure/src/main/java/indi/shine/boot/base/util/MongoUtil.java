@@ -168,15 +168,34 @@ public class MongoUtil {
         }
     }
 
+    public synchronized void copyDataBase(String fromDbName, String toDbName, MongoUtil toMongoUtil) {
+
+        MongoIterable<String> colNames = client.getDatabase(fromDbName).listCollectionNames();
+
+        for (String colName : colNames) {
+            copyCollection(fromDbName, colName, toMongoUtil, toDbName, colName);
+        }
+    }
+
     public void copyCollection(String fromDbName, String fromColName, String toDbName, String toColName) {
 
-        List<Document> indexLs = getIndex(fromDbName, fromColName);
+        copyCollection(this, fromDbName, fromColName, this, toDbName, toColName);
+    }
+
+    public void copyCollection(String fromDbName, String fromColName, MongoUtil toMongoUtil, String toDbName, String toColName) {
+
+        copyCollection(this, fromDbName, fromColName, toMongoUtil, toDbName, toColName);
+    }
+
+    private void copyCollection(MongoUtil fromMongo, String fromDbName, String fromColName, MongoUtil toMongo, String toDbName, String toColName) {
+
+        List<Document> indexLs = fromMongo.getIndex(fromDbName, fromColName);
         // 复制索引
-        createIndex(toDbName, toColName, (Document[]) indexLs.toArray());
+        toMongo.createIndex(toDbName, toColName, (Document[]) indexLs.toArray());
         // 一万条批量插入
         int pageNo = 1, pageSize = 10000;
         while (true) {
-            MongoCursor<Document> cursor = find(fromDbName, fromColName, null, null, pageNo, pageSize);
+            MongoCursor<Document> cursor = fromMongo.find(fromDbName, fromColName, null, null, pageNo, pageSize);
             if (!cursor.hasNext()) {
                 break;
             }
@@ -184,7 +203,7 @@ public class MongoUtil {
             while (cursor.hasNext()) {
                 docLs.add(cursor.next());
             }
-            insertMany(toDbName, toColName, docLs);
+            toMongo.insertMany(toDbName, toColName, docLs);
             pageNo ++;
         }
     }
