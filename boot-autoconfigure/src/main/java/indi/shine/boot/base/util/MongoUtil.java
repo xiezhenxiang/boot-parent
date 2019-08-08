@@ -191,7 +191,7 @@ public class MongoUtil {
 
         List<Document> indexLs = fromMongo.getIndex(fromDbName, fromColName);
         // 复制索引
-        toMongo.createIndex(toDbName, toColName, (Document[]) indexLs.toArray());
+        toMongo.createIndex(toDbName, toColName,  indexLs.toArray(new Document[indexLs.size()]));
         // 一万条批量插入
         int pageNo = 1, pageSize = 10000;
         while (true) {
