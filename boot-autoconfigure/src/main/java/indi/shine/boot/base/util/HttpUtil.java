@@ -65,7 +65,7 @@ public final class HttpUtil {
             int responseCode = connection.getResponseCode();
             if (responseCode == 200) {
                 result = inputStreamTOString(connection.getInputStream());
-            } else if (responseCode == 302) {
+            } else if (responseCode == 301 || responseCode == 302) {
                 url = connection.getHeaderField("Location");
                 return sendGet(url, head, proxyHost);
             } else{
