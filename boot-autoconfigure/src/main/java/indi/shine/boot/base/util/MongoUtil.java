@@ -6,6 +6,8 @@ import com.mongodb.ServerAddress;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoIterable;
+import com.mongodb.client.gridfs.GridFSBucket;
+import com.mongodb.client.gridfs.GridFSBuckets;
 import com.mongodb.client.model.UpdateManyModel;
 import com.mongodb.client.model.UpdateOptions;
 import indi.shine.boot.base.exception.ServiceException;
@@ -13,7 +15,9 @@ import org.bson.BsonDocument;
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
+import org.bson.types.ObjectId;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -207,6 +211,58 @@ public class MongoUtil {
             pageNo ++;
         }
     }
+
+    public String uploadFile(String fileDatabase, String fileCol, String fileName, InputStream in) {
+
+        GridFSBucket bucket = GridFSBuckets.create(client.getDatabase(fileDatabase), fileCol);
+        ObjectId fileId = bucket.uploadFromStream(fileName, in);
+        return fileId.toString();
+    }
+
+    public void downloadFile(String fileDatabase, String fileCol, String id, OutputStream out) {
+
+        GridFSBucket bucket = GridFSBuckets.create(client.getDatabase(fileDatabase), fileCol);
+        bucket.downloadToStream(new ObjectId(id), out);
+    }
+
+    public void downloadFile(String fileDatabase, String fileCol, String id, File outFile) {
+
+        OutputStream out = null;
+        try {
+            out = new FileOutputStream(outFile);
+            downloadFile(fileDatabase, fileCol, id, out);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public InputStream downloadFile(String fileDatabase, String fileCol, String id) {
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        downloadFile(fileDatabase, fileCol, id, out);
+        InputStream in = new ByteArrayInputStream(out.toByteArray());
+        try {
+            out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return in;
+    }
+
+    public void deleteFile(String fileDatabase, String fileCol, String id) {
+
+        GridFSBucket bucket = GridFSBuckets.create(client.getDatabase(fileDatabase), fileCol);
+        bucket.delete(new ObjectId(id));
+    }
+
 
     private void initClient() {
 
