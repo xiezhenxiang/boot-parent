@@ -65,11 +65,15 @@ public final class HttpUtil {
             int responseCode = connection.getResponseCode();
             if (responseCode == 200) {
                 result = inputStreamTOString(connection.getInputStream());
-            }else{
+            } else if (responseCode == 301 || responseCode == 302) {
+                url = connection.getHeaderField("Location");
+                return sendGet(url, head, proxyHost);
+            } else{
                 logger.info("url: {}", url);
                 logger.info("Http Get请求无结果，响应码为：{}", responseCode);
             }
         } catch (Exception e) {
+            e.printStackTrace();
             logger.info("url: {}", url);
             logger.error("Http Get请求异常 " + e);
         }
@@ -262,4 +266,5 @@ public final class HttpUtil {
         }
         return new String(outStream.toByteArray(), ENCODE);
     }
+
 }

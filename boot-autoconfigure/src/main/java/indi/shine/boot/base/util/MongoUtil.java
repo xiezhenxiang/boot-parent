@@ -6,6 +6,8 @@ import com.mongodb.ServerAddress;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoIterable;
+import com.mongodb.client.gridfs.GridFSBucket;
+import com.mongodb.client.gridfs.GridFSBuckets;
 import com.mongodb.client.model.UpdateManyModel;
 import com.mongodb.client.model.UpdateOptions;
 import indi.shine.boot.base.exception.ServiceException;
@@ -13,7 +15,9 @@ import org.bson.BsonDocument;
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
+import org.bson.types.ObjectId;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -168,15 +172,34 @@ public class MongoUtil {
         }
     }
 
+    public synchronized void copyDataBase(String fromDbName, String toDbName, MongoUtil toMongoUtil) {
+
+        MongoIterable<String> colNames = client.getDatabase(fromDbName).listCollectionNames();
+
+        for (String colName : colNames) {
+            copyCollection(fromDbName, colName, toMongoUtil, toDbName, colName);
+        }
+    }
+
     public void copyCollection(String fromDbName, String fromColName, String toDbName, String toColName) {
 
-        List<Document> indexLs = getIndex(fromDbName, fromColName);
+        copyCollection(this, fromDbName, fromColName, this, toDbName, toColName);
+    }
+
+    public void copyCollection(String fromDbName, String fromColName, MongoUtil toMongoUtil, String toDbName, String toColName) {
+
+        copyCollection(this, fromDbName, fromColName, toMongoUtil, toDbName, toColName);
+    }
+
+    private void copyCollection(MongoUtil fromMongo, String fromDbName, String fromColName, MongoUtil toMongo, String toDbName, String toColName) {
+
+        List<Document> indexLs = fromMongo.getIndex(fromDbName, fromColName);
         // 复制索引
-        createIndex(toDbName, toColName, (Document[]) indexLs.toArray());
+        toMongo.createIndex(toDbName, toColName,  indexLs.toArray(new Document[0]));
         // 一万条批量插入
         int pageNo = 1, pageSize = 10000;
         while (true) {
-            MongoCursor<Document> cursor = find(fromDbName, fromColName, null, null, pageNo, pageSize);
+            MongoCursor<Document> cursor = fromMongo.find(fromDbName, fromColName, null, null, pageNo, pageSize);
             if (!cursor.hasNext()) {
                 break;
             }
@@ -184,10 +207,62 @@ public class MongoUtil {
             while (cursor.hasNext()) {
                 docLs.add(cursor.next());
             }
-            insertMany(toDbName, toColName, docLs);
+            toMongo.insertMany(toDbName, toColName, docLs);
             pageNo ++;
         }
     }
+
+    public String uploadFile(String fileDatabase, String fileCol, String fileName, InputStream in) {
+
+        GridFSBucket bucket = GridFSBuckets.create(client.getDatabase(fileDatabase), fileCol);
+        ObjectId fileId = bucket.uploadFromStream(fileName, in);
+        return fileId.toString();
+    }
+
+    public void downloadFile(String fileDatabase, String fileCol, String id, OutputStream out) {
+
+        GridFSBucket bucket = GridFSBuckets.create(client.getDatabase(fileDatabase), fileCol);
+        bucket.downloadToStream(new ObjectId(id), out);
+    }
+
+    public void downloadFile(String fileDatabase, String fileCol, String id, File outFile) {
+
+        OutputStream out = null;
+        try {
+            out = new FileOutputStream(outFile);
+            downloadFile(fileDatabase, fileCol, id, out);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public InputStream downloadFile(String fileDatabase, String fileCol, String id) {
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        downloadFile(fileDatabase, fileCol, id, out);
+        InputStream in = new ByteArrayInputStream(out.toByteArray());
+        try {
+            out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return in;
+    }
+
+    public void deleteFile(String fileDatabase, String fileCol, String id) {
+
+        GridFSBucket bucket = GridFSBuckets.create(client.getDatabase(fileDatabase), fileCol);
+        bucket.delete(new ObjectId(id));
+    }
+
 
     private void initClient() {
 
