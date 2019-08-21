@@ -34,12 +34,6 @@ public class GeMybatis {
         MybatisGenUtil.genMapperAndXml();
     }
 
-    @Test
-    public void httpTest(){
-        String url = "https://www.facebook.com";
-        String str = HttpUtil.sendGet(url, "127.0.0.1:1080");
-        System.out.println(str);
-    }
 
     @Test
     @SuppressWarnings("unchecked")

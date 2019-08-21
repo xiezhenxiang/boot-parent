@@ -163,6 +163,7 @@ public class JerseySwaggerAutoConfiguration extends ResourceConfig {
             matchIfMissing = true
     )
     public CorsFilter corsFilter() {
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration corsConfiguration = new CorsConfiguration();
         corsConfiguration.addAllowedOrigin("*");
