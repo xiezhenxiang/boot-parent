@@ -95,20 +95,21 @@ public final class HttpUtil {
         return sendGet(url,null, proxyHost);
     }
 
-    private static String sendPost(String url, Map<String, String> head, Map<String, Object> formPara, String jsonPara) {
+    private static String sendPost(String url, Map<String, String> head, Map<String, Object> formPara, String jsonPara, String method) {
 
         String result = "";
         try {
             HttpURLConnection conn = openConnection(url, null);
-            conn.setRequestMethod("POST");
+            conn.setRequestMethod(method);
             conn.setDoOutput(true);
             if (head != null) {
                 for (Map.Entry<String, String> entry : head.entrySet()) {
                     conn.setRequestProperty(entry.getKey(), entry.getValue());
                 }
             }
-            conn.setRequestProperty("Content-Type", FORM_CONTENT_TYPE);
+
             if (formPara != null) {
+                conn.setRequestProperty("Content-Type", FORM_CONTENT_TYPE);
                 String httpEntity = parseParam(formPara);
                 OutputStream out = conn.getOutputStream();
                 out.write(httpEntity.getBytes());
@@ -127,23 +128,28 @@ public final class HttpUtil {
                 result = inputStreamTOString(conn.getInputStream());
             }else {
                 logger.info("url: {}", url);
-                logger.info("Http Post请求获取不到源码，响应码为：{}", responseCode);
+                logger.info("Http {}请求获取不到源码，响应码为：{}", method, responseCode);
             }
         } catch (Exception e) {
             logger.info("url: {}", url);
-            logger.error("Http Post请求获取源码异常 ", e);
+            logger.error("Http {}请求获取源码异常 ", method, e);
         }
         return result;
     }
 
+    public static String sendPut(String url, Map<String, String> head, String jsonPara) {
+
+        return sendPost(url, head, null, jsonPara, "PUT");
+    }
+
     public static String sendPost(String url, Map<String, String> head, Map<String, Object> formPara) {
 
-        return sendPost(url, head, formPara, null);
+        return sendPost(url, head, formPara, null, "POST");
     }
 
     public static String sendPost(String url, Map<String, String> head, String jsonPara) {
 
-        return sendPost(url, head, null, jsonPara);
+        return sendPost(url, head, null, jsonPara, "POST");
     }
 
     public static InputStream download(String url, String proxyHost) {
