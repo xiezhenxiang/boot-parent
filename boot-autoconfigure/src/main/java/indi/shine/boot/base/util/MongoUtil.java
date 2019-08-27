@@ -60,6 +60,7 @@ public class MongoUtil {
 
     public MongoCursor<Document> find(String db, String col, Document query, Document sort, Integer pageNo, Integer pageSize) {
 
+        initClient();
         MongoCursor<Document> mongoCursor = null;
         query = query == null ? new Document() : query;
         sort = sort == null ? new Document() : sort;
@@ -78,6 +79,7 @@ public class MongoUtil {
 
     public void insertMany(String database, String collection, List<Document> documentList) {
 
+        initClient();
         if (documentList == null || documentList.isEmpty()) {
             return;
         }
@@ -87,21 +89,25 @@ public class MongoUtil {
 
     public void insertOne(String database, String collection, Document doc) {
 
+        initClient();
         client.getDatabase(database).getCollection(collection).insertOne(doc);
     }
 
     public void updateOne(String database, String collection, Document query, Document doc) {
 
+        initClient();
         client.getDatabase(database).getCollection(collection).updateOne(query, new Document("$set", doc));
     }
 
     public void upsertOne(String database, String collection, Document query, Document doc) {
 
+        initClient();
         client.getDatabase(database).getCollection(collection).updateOne(query, doc, new UpdateOptions().upsert(true));
     }
 
     public void upsertMany(String database, String collection, List<Document> ls, boolean upsert, String... fieldArr) {
 
+        initClient();
         if (ls == null || ls.isEmpty()) {
             return;
         }
@@ -126,16 +132,19 @@ public class MongoUtil {
 
     public void updateMany(String database, String collection, Document query, Document doc) {
 
+        initClient();
         client.getDatabase(database).getCollection(collection).updateMany(query, new Document("$set", doc));
     }
 
     public Long count(String db, String col, Document query){
 
+        initClient();
         return client.getDatabase(db).getCollection(col).count(query);
     }
 
     public List<Document> getIndex(String db, String col) {
 
+        initClient();
         List<Document> indexLs = new ArrayList<>();
         MongoCursor<Document> cursor = client.getDatabase(db).getCollection(col).listIndexes().iterator();
         cursor.forEachRemaining(s -> indexLs.add((Document) s.get("key")));
@@ -145,11 +154,13 @@ public class MongoUtil {
 
     public void delete(String db, String col, Document query){
 
+        initClient();
         client.getDatabase(db).getCollection(col).deleteMany(query);
     }
 
     public void createIndex(String db, String col, Document... indexArr) {
 
+        initClient();
         for (Document index : indexArr) {
             client.getDatabase(db).getCollection(col).createIndex(index);
         }
@@ -157,6 +168,7 @@ public class MongoUtil {
 
     public void dropIndex(String db, String col, Document... indexArr) {
 
+        initClient();
         for (Document index : indexArr) {
             client.getDatabase(db).getCollection(col).dropIndex(index);
         }
@@ -165,6 +177,7 @@ public class MongoUtil {
 
     public synchronized void copyDataBase(String fromDbName, String toDbName) {
 
+        initClient();
         MongoIterable<String> colNames = client.getDatabase(fromDbName).listCollectionNames();
 
         for (String colName : colNames) {
@@ -174,6 +187,7 @@ public class MongoUtil {
 
     public synchronized void copyDataBase(String fromDbName, String toDbName, MongoUtil toMongoUtil) {
 
+        initClient();
         MongoIterable<String> colNames = client.getDatabase(fromDbName).listCollectionNames();
 
         for (String colName : colNames) {
@@ -183,16 +197,19 @@ public class MongoUtil {
 
     public void copyCollection(String fromDbName, String fromColName, String toDbName, String toColName) {
 
+        initClient();
         copyCollection(this, fromDbName, fromColName, this, toDbName, toColName);
     }
 
     public void copyCollection(String fromDbName, String fromColName, MongoUtil toMongoUtil, String toDbName, String toColName) {
 
+        initClient();
         copyCollection(this, fromDbName, fromColName, toMongoUtil, toDbName, toColName);
     }
 
     private void copyCollection(MongoUtil fromMongo, String fromDbName, String fromColName, MongoUtil toMongo, String toDbName, String toColName) {
 
+        initClient();
         List<Document> indexLs = fromMongo.getIndex(fromDbName, fromColName);
         // 复制索引
         toMongo.createIndex(toDbName, toColName,  indexLs.toArray(new Document[0]));
@@ -214,6 +231,7 @@ public class MongoUtil {
 
     public String uploadFile(String fileDatabase, String fileCol, String fileName, InputStream in) {
 
+        initClient();
         GridFSBucket bucket = GridFSBuckets.create(client.getDatabase(fileDatabase), fileCol);
         ObjectId fileId = bucket.uploadFromStream(fileName, in);
         return fileId.toString();
@@ -221,12 +239,14 @@ public class MongoUtil {
 
     public void downloadFile(String fileDatabase, String fileCol, String id, OutputStream out) {
 
+        initClient();
         GridFSBucket bucket = GridFSBuckets.create(client.getDatabase(fileDatabase), fileCol);
         bucket.downloadToStream(new ObjectId(id), out);
     }
 
     public void downloadFile(String fileDatabase, String fileCol, String id, File outFile) {
 
+        initClient();
         OutputStream out = null;
         try {
             out = new FileOutputStream(outFile);
@@ -246,6 +266,7 @@ public class MongoUtil {
 
     public InputStream downloadFile(String fileDatabase, String fileCol, String id) {
 
+        initClient();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         downloadFile(fileDatabase, fileCol, id, out);
         InputStream in = new ByteArrayInputStream(out.toByteArray());
@@ -259,6 +280,7 @@ public class MongoUtil {
 
     public void deleteFile(String fileDatabase, String fileCol, String id) {
 
+        initClient();
         GridFSBucket bucket = GridFSBuckets.create(client.getDatabase(fileDatabase), fileCol);
         bucket.delete(new ObjectId(id));
     }
@@ -304,6 +326,8 @@ public class MongoUtil {
     }
 
     public MongoClient getClient() {
+
+        initClient();
         return client;
     }
 }
