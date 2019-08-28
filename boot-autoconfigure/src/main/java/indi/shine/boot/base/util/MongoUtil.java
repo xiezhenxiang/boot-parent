@@ -298,6 +298,10 @@ public class MongoUtil {
                     Integer key = elfHash(ip + port);
                     if (pool.containsKey(key)) {
                         client = pool.get(key);
+                        if (client == null) {
+                            pool.remove(key);
+                            initClient();
+                        }
                     } else {
                         try {
                             MongoClientOptions options = MongoClientOptions.builder()
