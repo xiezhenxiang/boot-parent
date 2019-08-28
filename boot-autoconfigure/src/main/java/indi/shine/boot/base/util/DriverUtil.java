@@ -5,9 +5,9 @@ import indi.shine.boot.base.exception.ServiceException;
 
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static indi.shine.boot.base.util.AlgorithmUtil.elfHash;
@@ -21,8 +21,8 @@ public class DriverUtil {
     private String url;
     private String userName;
     private String pwd;
-    private volatile Connection con;
-    private volatile static Map<Integer, Connection> pool = new HashMap<>(10);
+    private Connection con;
+    private volatile static ConcurrentHashMap<Integer, Connection> pool = new ConcurrentHashMap<>(10);
 
     public static DriverUtil getInstance(String url, String userName, String pwd ) {
 
@@ -53,6 +53,7 @@ public class DriverUtil {
      **/
     public boolean update(String sql, Object... params) {
 
+        initConnection();
         PreparedStatement statement;
         int result = 0;
         try {
@@ -79,6 +80,7 @@ public class DriverUtil {
      **/
     public List<JSONObject> find(String sql, Object... params){
 
+        initConnection();
         List<JSONObject> ls = new ArrayList<>();
         PreparedStatement statement;
         try {
@@ -109,12 +111,14 @@ public class DriverUtil {
 
     public JSONObject findOne(String sql, Object... params){
 
+        initConnection();
         List<JSONObject> ls = find(sql, params);
         return ls.isEmpty() ? new JSONObject() : ls.get(0);
     }
 
     public List<String> getTables() {
 
+        initConnection();
         List<String> ls;
         if (url.contains("jdbc:hive2")) {
             ls = find("show tables").stream().map(s -> s.getString("tab_name")).collect(Collectors.toList());
@@ -134,6 +138,7 @@ public class DriverUtil {
      **/
     public boolean insertSelective(String tbName, JSONObject bean) {
 
+        initConnection();
         String sql = "insert into " + tbName + " (";
         List<Object> values = new ArrayList<>();
         for (Map.Entry<String, Object> entry : bean.entrySet()) {
@@ -159,33 +164,38 @@ public class DriverUtil {
     private void initConnection() {
 
         if (con == null) {
+            try {
+                synchronized (DriverUtil.class) {
 
-            synchronized (DriverUtil.class) {
+                    if (con == null) {
 
-                if (con == null) {
-                    userName = userName == null ? "" : userName;
-                    pwd = pwd == null ? "" : pwd;
-                    Integer key = elfHash(url + userName + pwd);
-                    if (pool.containsKey(key)) {
-                        con = pool.get(key);
-                    } else {
+                        userName = userName == null ? "" : userName;
+                        pwd = pwd == null ? "" : pwd;
+                        Integer key = elfHash(url + userName + pwd);
+                        if (pool.containsKey(key)) {
+                            con = pool.get(key);
+                            if (con == null || con.isClosed()) {
+                                pool.remove(key);
+                                initConnection();
+                            }
+                        } else {
 
-                        String className = "com.mysql.jdbc.Driver";
-                        if (url.contains("jdbc:dm:")) {
-                            className = "dm.jdbc.driver.DmDriver";
-                        } else if (url.contains("jdbc:hive")) {
-                            className = "org.apache.hive.jdbc.HiveDriver";
-                        }
-                        try {
+                            String className = "com.mysql.jdbc.Driver";
+                            if (url.contains("jdbc:dm:")) {
+                                className = "dm.jdbc.driver.DmDriver";
+                            } else if (url.contains("jdbc:hive")) {
+                                className = "org.apache.hive.jdbc.HiveDriver";
+                            }
+
                             Class.forName(className);
                             con = DriverManager.getConnection(url, userName, pwd);
                             pool.put(key, con);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            throw ServiceException.newInstance(50050, "datasource connect error!");
                         }
                     }
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw ServiceException.newInstance(50050, "datasource connect error!");
             }
         }
     }
