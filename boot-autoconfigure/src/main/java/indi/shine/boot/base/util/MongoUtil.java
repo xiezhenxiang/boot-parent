@@ -36,6 +36,8 @@ public class MongoUtil {
     private volatile MongoClient client;
     private volatile Map<Integer, MongoClient> pool = new HashMap<>(10);
 
+    private static final Integer batchSize = 1000;
+
     public static MongoUtil getInstance(String ip, Integer port) {
 
         return new MongoUtil(ip, port);
@@ -73,7 +75,7 @@ public class MongoUtil {
         if (pageSize != null) {
             findIterable.limit(pageSize);
         }
-        mongoCursor = findIterable.noCursorTimeout(true).iterator();
+        mongoCursor = findIterable.batchSize(batchSize).noCursorTimeout(true).iterator();
         return mongoCursor;
     }
 
