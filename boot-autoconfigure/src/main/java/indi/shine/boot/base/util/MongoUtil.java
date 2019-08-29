@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static indi.shine.boot.base.util.AlgorithmUtil.elfHash;
@@ -75,7 +76,7 @@ public class MongoUtil {
         if (pageSize != null) {
             findIterable.limit(pageSize);
         }
-        mongoCursor = findIterable.batchSize(batchSize).noCursorTimeout(true).iterator();
+        mongoCursor = findIterable.batchSize(batchSize).maxAwaitTime(10L, TimeUnit.MINUTES).iterator();
         return mongoCursor;
     }
 
