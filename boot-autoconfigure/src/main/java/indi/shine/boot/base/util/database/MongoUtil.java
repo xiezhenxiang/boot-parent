@@ -1,4 +1,4 @@
-package indi.shine.boot.base.util;
+package indi.shine.boot.base.util.database;
 
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
@@ -35,9 +35,9 @@ public class MongoUtil {
     private String ip;
     private Integer port;
     private volatile MongoClient client;
-    private volatile Map<Integer, MongoClient> pool = new HashMap<>(10);
+    private static volatile Map<String, MongoClient> pool = new HashMap<>(10);
 
-    private static final Integer batchSize = 1000;
+    private static final Integer BATCH_SIZE = 1000;
 
     public static MongoUtil getInstance(String ip, Integer port) {
 
@@ -76,7 +76,7 @@ public class MongoUtil {
         if (pageSize != null) {
             findIterable.limit(pageSize);
         }
-        mongoCursor = findIterable.batchSize(batchSize).maxAwaitTime(10L, TimeUnit.MINUTES).iterator();
+        mongoCursor = findIterable.batchSize(BATCH_SIZE).maxAwaitTime(10L, TimeUnit.MINUTES).iterator();
         return mongoCursor;
     }
 
@@ -296,36 +296,39 @@ public class MongoUtil {
             synchronized (MongoUtil.class){
 
                 if (client == null) {
-                    Integer key = elfHash(ip + port);
+
+                    String key = ip + ":" + port;
                     if (pool.containsKey(key)) {
                         client = pool.get(key);
                         if (client == null) {
                             pool.remove(key);
-                            initClient();
+                        } else {
+                            return;
                         }
-                    } else {
-                        try {
-                            MongoClientOptions options = MongoClientOptions.builder()
-                                    .connectionsPerHost(20)
-                                    .minConnectionsPerHost(1)
-                                    .maxConnectionIdleTime(0)
-                                    .maxConnectionLifeTime(0)
-                                    .connectTimeout(30000)
-                                    .socketTimeout(120000)
-                                    .build();
+                    }
+                    try {
+                        MongoClientOptions options = MongoClientOptions.builder()
+                                .connectionsPerHost(20)
+                                .minConnectionsPerHost(1)
+                                .maxConnectionIdleTime(0)
+                                .maxConnectionLifeTime(0)
+                                .connectTimeout(30000)
+                                .socketTimeout(120000)
+                                .build();
 
-                            String[] ips = ip.split(",");
-                            List<ServerAddress> urlList = new ArrayList<>();
-                            for (String url : ips) {
-                                urlList.add(new ServerAddress(url, port));
-                            }
-
-                            client = new MongoClient(urlList, options);
-                            pool.put(key, client);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            throw ServiceException.newInstance(50051, "mongo connect error!");
+                        String[] ips = ip.split(",");
+                        List<ServerAddress> urlList = new ArrayList<>();
+                        for (String url : ips) {
+                            urlList.add(new ServerAddress(url, port));
                         }
+
+                        client = new MongoClient(urlList, options);
+                        pool.put(key, client);
+
+                    } catch (Exception e) {
+
+                        e.printStackTrace();
+                        throw ServiceException.newInstance(50051, "mongo connect error!");
                     }
                 }
             }

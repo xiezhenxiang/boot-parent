@@ -1,4 +1,4 @@
-package indi.shine.boot.base.util;
+package indi.shine.boot.base.util.database;
 
 import com.alibaba.fastjson.JSONObject;
 import indi.shine.boot.base.exception.ServiceException;
@@ -22,7 +22,7 @@ public class DriverUtil {
     private String userName;
     private String pwd;
     private Connection con;
-    private volatile static ConcurrentHashMap<Integer, Connection> pool = new ConcurrentHashMap<>(10);
+    private volatile static ConcurrentHashMap<String, Connection> pool = new ConcurrentHashMap<>(10);
 
     public static DriverUtil getInstance(String url, String userName, String pwd ) {
 
@@ -171,26 +171,28 @@ public class DriverUtil {
 
                         userName = userName == null ? "" : userName;
                         pwd = pwd == null ? "" : pwd;
-                        Integer key = elfHash(url + userName + pwd);
+                        String key = url + "_" + userName + "_" + pwd;
+
                         if (pool.containsKey(key)) {
+
                             con = pool.get(key);
                             if (con == null || con.isClosed()) {
                                 pool.remove(key);
-                                initConnection();
+                            } else {
+                                return;
                             }
-                        } else {
-
-                            String className = "com.mysql.jdbc.Driver";
-                            if (url.contains("jdbc:dm:")) {
-                                className = "dm.jdbc.driver.DmDriver";
-                            } else if (url.contains("jdbc:hive")) {
-                                className = "org.apache.hive.jdbc.HiveDriver";
-                            }
-
-                            Class.forName(className);
-                            con = DriverManager.getConnection(url, userName, pwd);
-                            pool.put(key, con);
                         }
+
+                        String className = "com.mysql.jdbc.Driver";
+                        if (url.contains("jdbc:dm:")) {
+                            className = "dm.jdbc.driver.DmDriver";
+                        } else if (url.contains("jdbc:hive")) {
+                            className = "org.apache.hive.jdbc.HiveDriver";
+                        }
+
+                        Class.forName(className);
+                        con = DriverManager.getConnection(url, userName, pwd);
+                        pool.put(key, con);
                     }
                 }
             } catch (Exception e) {
