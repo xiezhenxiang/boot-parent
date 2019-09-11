@@ -18,6 +18,8 @@ import static indi.shine.boot.base.util.AlgorithmUtil.elfHash;
  **/
 public class DriverUtil {
 
+    // todo druid
+
     private String url;
     private String userName;
     private String pwd;
