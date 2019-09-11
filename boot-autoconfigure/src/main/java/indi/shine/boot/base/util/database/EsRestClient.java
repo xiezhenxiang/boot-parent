@@ -11,13 +11,14 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.impl.nio.reactor.IOReactorConfig;
 import org.apache.http.nio.entity.NStringEntity;
 import org.apache.http.util.EntityUtils;
-import org.assertj.core.util.Lists;
 import org.elasticsearch.client.HttpAsyncResponseConsumerFactory;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -48,7 +49,7 @@ public class EsRestClient {
             client.performRequest("PUT", endpoint, Collections.emptyMap(), entity);
         } catch (IOException e) {
             log.error(e.getMessage());
-            throw ServiceException.newInstance(60000, "elastic create index fail!");
+            exit("elastic create index fail!");
         }
     }
 
@@ -60,8 +61,19 @@ public class EsRestClient {
             client.performRequest("DELETE", endpoint);
         } catch (IOException e) {
             log.error(e.getMessage());
-            throw ServiceException.newInstance(60000, "elastic delete index fail!");
+            exit("elastic delete index fail!");
         }
+    }
+
+    /**
+     * 索引数据迁移
+     * @author xiezhenxiang 2019/9/10
+     **/
+    public void reindex(String sourceIndex, String destIndex) {
+
+        initClient();
+        String endpoint ="/_reindex";
+
     }
 
     public void addAlias(String index, String ... aliases) {
@@ -97,7 +109,20 @@ public class EsRestClient {
             client.performRequest("POST", endpoint, Collections.emptyMap(), entity);
         } catch (IOException e) {
             log.error(e.getMessage());
-            throw ServiceException.newInstance(60000, "elastic " + action + " alias fail!");
+            exit("elastic " + action + " alias fail!");
+        }
+    }
+
+    public void deleteById(String index, String type, String id) {
+
+        initClient();
+        String endpoint = "/" + index + "/" + type + "/" + id;
+
+        try {
+            client.performRequest("DELETE", endpoint, Collections.emptyMap());
+        } catch (IOException e) {
+            log.error(e.getMessage());
+            exit("elastic delete doc fail!");
         }
     }
 
@@ -116,8 +141,14 @@ public class EsRestClient {
             client.performRequest("POST", endpoint, Collections.emptyMap(), entity);
         } catch (IOException e) {
             log.error(e.getMessage());
-            throw ServiceException.newInstance(60000, "elastic delete_by_query fail!");
+            exit("elastic delete_by_query fail!");
         }
+    }
+
+    public void clearIndex(String index, String type) {
+
+        String query = "{\"match_all\":{}}";
+        deleteByQuery(index, type, query);
     }
 
     public void upsertById(String index, String type, String id, JSONObject doc) {
@@ -131,14 +162,33 @@ public class EsRestClient {
             client.performRequest("PUT", endpoint, Collections.emptyMap(), entity);
         } catch (IOException e) {
             log.error(e.getMessage());
-            throw ServiceException.newInstance(60000, "elastic index doc fail!");
+            exit("elastic index doc fail!");
         }
     }
 
-    public JSONObject getById(String index, String type, String id) {
+    public void updateById(String index, String type, String id, JSONObject doc) {
 
         initClient();
-        JSONObject doc;
+        String endpoint = "/" + index + "/" + type + "/" + id + "/_update";
+
+        doc.remove("_id");
+        JSONObject paraData = new JSONObject();
+        paraData.put("doc", doc);
+
+        NStringEntity entity = new NStringEntity(paraData.toJSONString(), ContentType.APPLICATION_JSON);
+
+        try {
+            client.performRequest("POST", endpoint, Collections.emptyMap(), entity);
+        } catch (IOException e) {
+            log.error(e.getMessage());
+            exit("elastic update doc fail!");
+        }
+    }
+
+    public JSONObject findById(String index, String type, String id) {
+
+        initClient();
+        JSONObject doc = null;
         String endpoint = "/" + index + "/" + type + "/" + id;
 
         try {
@@ -149,7 +199,7 @@ public class EsRestClient {
             doc.put("_id", rs.getString("_id"));
         } catch (IOException e) {
             log.error(e.getMessage());
-            throw ServiceException.newInstance(60000, "elastic index doc fail!");
+            exit("elastic index doc fail!");
         }
 
         return doc;
@@ -166,7 +216,7 @@ public class EsRestClient {
             client.performRequest("POST", endpoint, Collections.emptyMap(), entity);
         } catch (IOException e) {
             log.error(e.getMessage());
-            throw ServiceException.newInstance(60000, "elastic index doc fail!");
+            exit("elastic insert doc fail!");
         }
     }
 
@@ -191,20 +241,15 @@ public class EsRestClient {
             client.performRequest("POST", endpoint, Collections.emptyMap(), entity);
         } catch (IOException e) {
             log.error(e.getMessage());
-            throw ServiceException.newInstance(60000, "elastic bulk create fail!");
+            exit("elastic bulk create fail!");
         }
     }
 
-    public void updateOne() {
-
-        initClient();
-    }
-
     /**
-     * 根据id批量更新
+     * 根据id批量插入更新
      * @author xiezhenxiang 2019/9/9
      **/
-    public void bulkUpsert(String index, String type, Collection<JSONObject> ls) {
+    public void bulkUpsertById(String index, String type, Collection<JSONObject> ls) {
 
         initClient();
         if (ls.isEmpty()) {
@@ -229,13 +274,81 @@ public class EsRestClient {
             client.performRequest("POST", endpoint, Collections.emptyMap(), entity);
         } catch (IOException e) {
             log.error(e.getMessage());
-            throw ServiceException.newInstance(60000, "elastic bulk index fail!");
+            exit("elastic bulk index fail!");
         }
     }
 
-    public void bulkUpSert() {
+    /**
+     * 根据id批量插入更新
+     * @author xiezhenxiang 2019/9/9
+     **/
+    public void bulkDeleteById(String index, String type, Collection<JSONObject> ls) {
 
         initClient();
+        if (ls.isEmpty()) {
+            return;
+        }
+        StringBuffer buffer = new StringBuffer();
+        ls.forEach(s -> {
+
+            String id = s.getString("_id");
+            if (id != null) {
+                buffer.append("{\"delete\":{\"_index\":\"" + index + "\",\"_type\":\"" + type + "\",\"_id\":\"" + id + "\"}}\n");
+                s.remove("_id");
+                buffer.append(s.toJSONString() + "\n");
+            }
+        });
+
+        String endpoint = "/_bulk";
+
+        NStringEntity entity = new NStringEntity(buffer.toString(), ContentType.APPLICATION_JSON);
+
+        try {
+            client.performRequest("POST", endpoint, Collections.emptyMap(), entity);
+        } catch (IOException e) {
+            log.error(e.getMessage());
+            exit("elastic bulk delete fail!");
+        }
+    }
+
+    public void updateByQuery (String index, String type, String queryStr, JSONObject doc) {
+
+        if (doc.isEmpty()) {
+            return;
+        }
+
+        initClient();
+        doc.remove("_id");
+        String endpoint = StringUtils.isBlank(type) ? "/" + index : "/" + index + "/" + type;
+        endpoint += "/_update_by_query?refresh&conflicts=proceed";
+
+        JSONObject paraData = new JSONObject();
+        paraData.put("query", JSONObject.parseObject(queryStr));
+
+        JSONObject script = new JSONObject();
+        script.put("lang", "painless");
+        script.put("params", doc);
+        StringBuffer source = new StringBuffer();
+        doc.keySet().forEach(s -> {
+            source.append("ctx._source."+ s +"=params."+ s +";");
+        });
+        script.put("inline", source.toString());
+
+        paraData.put("script", script);
+
+        NStringEntity entity = new NStringEntity(paraData.toJSONString(), ContentType.APPLICATION_JSON);
+
+        try {
+            client.performRequest("POST", endpoint, Collections.emptyMap(), entity);
+        } catch (IOException e) {
+            log.error(e.getMessage());
+            exit("elastic update_by_query fail!");
+        }
+    }
+
+    public void upsertByQuery() {
+
+
     }
 
     public void find(String index, String type, Integer pageNo, Integer pageSize, String query, String sort) {
@@ -249,13 +362,11 @@ public class EsRestClient {
 
         EsRestClient restClient = getInstance(new HttpHost("192.168.4.11", 9200));
         JSONObject doc = new JSONObject();
-        doc.put("name", "xzxxzx2");
-        doc.put("_id", "1");
-        List<JSONObject> ls = Lists.newArrayList();
-        ls.add(doc);
-        // restClient.bulkUpdate("kg_gw_help_test", "data", ls);
-        // restClient.insert("kg_gw_help_test", "data", doc);
-        // System.out.println(restClient.getById("kg_gw_help_test", "data", "1").toJSONString());
+        doc.put("title", "update4");
+        doc.put("name1", "update4");
+        doc.put("_id", "123");
+
+        // restClient.updateByQuery("kg_gw_help_test", null, "{\"match\":{\"title\":\"update4\"}}", doc);
     }
 
     private EsRestClient(HttpHost... hosts) {
@@ -301,6 +412,11 @@ public class EsRestClient {
                 }
             }
         }
+    }
+
+    private void exit(String msg) {
+
+        throw ServiceException.newInstance(60000, msg);
     }
 
     private String hostStr() {
