@@ -18,7 +18,7 @@ import static indi.shine.boot.base.util.AlgorithmUtil.elfHash;
  **/
 public class DriverUtil {
 
-    // todo druid
+    // todo druid 8小时连接
 
     private String url;
     private String userName;
