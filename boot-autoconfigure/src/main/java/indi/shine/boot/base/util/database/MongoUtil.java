@@ -51,17 +51,17 @@ public class MongoUtil {
         initClient();
     }
 
-    public MongoCursor<Document> find(String db, String col, Document query, Document sort) {
+    public MongoCursor<Document> find(String db, String col, Bson query, Bson sort) {
 
         return find(db, col, query, sort, null, null);
     }
 
-    public  MongoCursor<Document> find(String db, String col, Document query) {
+    public  MongoCursor<Document> find(String db, String col, Bson query) {
 
         return find(db, col, query, null, null, null);
     }
 
-    public MongoCursor<Document> find(String db, String col, Document query, Document sort, Integer pageNo, Integer pageSize) {
+    public MongoCursor<Document> find(String db, String col, Bson query, Bson sort, Integer pageNo, Integer pageSize) {
 
         initClient();
         MongoCursor<Document> mongoCursor = null;
@@ -96,13 +96,13 @@ public class MongoUtil {
         client.getDatabase(database).getCollection(collection).insertOne(doc);
     }
 
-    public void updateOne(String database, String collection, Document query, Document doc) {
+    public void updateOne(String database, String collection, Bson query, Document doc) {
 
         initClient();
         client.getDatabase(database).getCollection(collection).updateOne(query, new Document("$set", doc));
     }
 
-    public void upsertOne(String database, String collection, Document query, Document doc) {
+    public void upsertOne(String database, String collection, Bson query, Document doc) {
 
         initClient();
         client.getDatabase(database).getCollection(collection).updateOne(query, doc, new UpdateOptions().upsert(true));
@@ -133,13 +133,13 @@ public class MongoUtil {
         client.getDatabase(database).getCollection(collection).bulkWrite(requests);
     }
 
-    public void updateMany(String database, String collection, Document query, Document doc) {
+    public void updateMany(String database, String collection, Bson query, Document doc) {
 
         initClient();
         client.getDatabase(database).getCollection(collection).updateMany(query, new Document("$set", doc));
     }
 
-    public Long count(String db, String col, Document query){
+    public Long count(String db, String col, Bson query){
 
         initClient();
         return client.getDatabase(db).getCollection(col).count(query);
@@ -155,7 +155,7 @@ public class MongoUtil {
         return indexLs;
     }
 
-    public void delete(String db, String col, Document query){
+    public void delete(String db, String col, Bson query){
 
         initClient();
         client.getDatabase(db).getCollection(col).deleteMany(query);
