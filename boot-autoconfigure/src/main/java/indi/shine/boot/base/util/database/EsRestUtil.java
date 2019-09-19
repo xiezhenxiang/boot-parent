@@ -26,18 +26,18 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author xiezhenxiang 2019/9/7
  **/
 @Slf4j
-public class EsRestClient {
+public class EsRestUtil {
 
     private RestClient client;
     private HttpHost[] hosts;
     private volatile static ConcurrentHashMap<String, RestClient> pool = new ConcurrentHashMap<>(10);
 
-    public static EsRestClient getInstance(HttpHost... hosts) {
+    public static EsRestUtil getInstance(HttpHost... hosts) {
 
         if (hosts.length == 0) {
             throw ServiceException.newInstance(60000, "elastic host is empty!");
         }
-        return new EsRestClient(hosts);
+        return new EsRestUtil(hosts);
     }
 
     public void createIndex(String index, String mapping) {
@@ -66,14 +66,111 @@ public class EsRestClient {
     }
 
     /**
-     * 索引数据迁移
-     * @author xiezhenxiang 2019/9/10
+     * add a new type to an existing index
+     * @author xiezhenxiang 2019/9/12
      **/
-    public void reindex(String sourceIndex, String destIndex) {
+    public void createMappings(String index, String mappings) {
 
         initClient();
-        String endpoint ="/_reindex";
+        JSONObject para = new JSONObject();
+        para.put("mappings", JSONObject.parseObject(mappings));
 
+        String endpoint ="/" + index;
+        NStringEntity entity = new NStringEntity(para.toJSONString(), ContentType.APPLICATION_JSON);
+        try {
+            client.performRequest("PUT", endpoint, Collections.emptyMap(), entity);
+        } catch (IOException e) {
+            log.error(e.getMessage());
+            exit("elastic create mappings fail!");
+        }
+    }
+
+    /**
+     * add new fields to an existing type
+     * @author xiezhenxiang 2019/9/12
+     **/
+    public void putMapping(String index, String type, String properties) {
+
+        initClient();
+
+        String endpoint ="/" + index + "/_mapping/" + type;
+        NStringEntity entity = new NStringEntity(properties, ContentType.APPLICATION_JSON);
+        try {
+            client.performRequest("PUT", endpoint, Collections.emptyMap(), entity);
+        } catch (IOException e) {
+            log.error(e.getMessage());
+            exit("elastic put mapping fail!");
+        }
+    }
+
+    public void reindex(String sourceIndex, String sourceType, String destIndex) {
+        reindex( null, sourceIndex, sourceType, destIndex, null, 3000);
+    }
+
+    /**
+     * move index's data to another
+     * @author xiezhenxiang 2019/9/10
+     **/
+    public void reindex(String sourceHostUri, String sourceIndex, String sourceType, String destIndex, String query, Integer batchSize) {
+
+        initClient();
+        String endpoint ="/_reindex?slices=5";
+
+        JSONObject para = new JSONObject();
+        para.put("conflicts", "proceed");
+        JSONObject source = new JSONObject();
+        JSONObject dest = new JSONObject();
+
+        if (StringUtils.isNotBlank(sourceHostUri)) {
+
+            JSONObject remote = new JSONObject();
+            remote.put("host", sourceHostUri);
+            source.put("remote", remote);
+        }
+
+        source.put("index", sourceIndex);
+
+        if (StringUtils.isNotBlank(sourceType)) {
+            source.put("type", sourceType);
+        }
+        if (StringUtils.isNotBlank(query)) {
+            source.put("query", JSONObject.parseObject(query));
+        }
+        if (batchSize != null) {
+            source.put("size", batchSize);
+        }
+        para.put("source", source);
+
+        dest.put("index", destIndex);
+        dest.put("version_type", "internal");
+        dest.put("routing", "=cat");
+        para.put("dest", dest);
+        setRefreshInterval(destIndex, "30s");
+        NStringEntity entity = new NStringEntity(para.toJSONString(), ContentType.APPLICATION_JSON);
+        try {
+            client.performRequest("POST", endpoint, Collections.emptyMap(), entity);
+        } catch (IOException e) {
+            log.error(e.getMessage());
+            exit("elastic reindex fail!");
+        } finally {
+            setRefreshInterval(sourceIndex, "1s");
+        }
+    }
+
+    private void setRefreshInterval(String index, Object interval) {
+
+        initClient();
+        String endpoint ="/" + index + "/_settings";
+        JSONObject para = new JSONObject();
+        para.put("refresh_interval", interval);
+
+        NStringEntity entity = new NStringEntity(para.toJSONString(), ContentType.APPLICATION_JSON);
+        try {
+            client.performRequest("PUT", endpoint, Collections.emptyMap(), entity);
+        } catch (IOException e) {
+            log.error(e.getMessage());
+            exit("elastic set refresh_interval fail!");
+        }
     }
 
     public void addAlias(String index, String ... aliases) {
@@ -320,7 +417,7 @@ public class EsRestClient {
         initClient();
         doc.remove("_id");
         String endpoint = StringUtils.isBlank(type) ? "/" + index : "/" + index + "/" + type;
-        endpoint += "/_update_by_query?refresh&conflicts=proceed";
+        endpoint += "/_update_by_query?conflicts=proceed";
 
         JSONObject paraData = new JSONObject();
         paraData.put("query", JSONObject.parseObject(queryStr));
@@ -346,10 +443,7 @@ public class EsRestClient {
         }
     }
 
-    public void upsertByQuery() {
 
-
-    }
 
     public void find(String index, String type, Integer pageNo, Integer pageSize, String query, String sort) {
 
@@ -360,16 +454,16 @@ public class EsRestClient {
 
     public static void main(String[] args) {
 
-        EsRestClient restClient = getInstance(new HttpHost("192.168.4.11", 9200));
+        EsRestUtil restClient = getInstance(new HttpHost("192.168.4.11", 9200));
         JSONObject doc = new JSONObject();
         doc.put("title", "update4");
         doc.put("name1", "update4");
         doc.put("_id", "123");
 
-        // restClient.updateByQuery("kg_gw_help_test", null, "{\"match\":{\"title\":\"update4\"}}", doc);
+        restClient.reindex("kg_gw_help_test", null, "kg_gw_help_test");
     }
 
-    private EsRestClient(HttpHost... hosts) {
+    private EsRestUtil(HttpHost... hosts) {
 
         this.hosts = hosts;
         initClient();
@@ -378,7 +472,7 @@ public class EsRestClient {
     private void initClient() {
 
         if (client == null) {
-            synchronized (EsRestClient.class){
+            synchronized (EsRestUtil.class){
                 if (client == null) {
 
                     String key = hostStr();
