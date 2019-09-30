@@ -1,10 +1,13 @@
 package indi.shine.boot.base.util.database;
 
 import com.alibaba.fastjson.JSONObject;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import indi.shine.boot.base.exception.ServiceException;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,13 +21,12 @@ import static indi.shine.boot.base.util.AlgorithmUtil.elfHash;
  **/
 public class DriverUtil {
 
-    // todo druid 8小时连接
-
+    private HikariDataSource dataSource = null;
     private String url;
     private String userName;
     private String pwd;
     private Connection con;
-    private volatile static ConcurrentHashMap<String, Connection> pool = new ConcurrentHashMap<>(10);
+    private static Map<String, HikariDataSource> pool = new HashMap<>();
 
     public static DriverUtil getInstance(String url, String userName, String pwd ) {
 
@@ -43,7 +45,7 @@ public class DriverUtil {
         this.url = url;
         this.userName = userName;
         this.pwd = pwd;
-        initConnection();
+        initDataSource();
     }
 
 
@@ -55,7 +57,7 @@ public class DriverUtil {
      **/
     public boolean update(String sql, Object... params) {
 
-        initConnection();
+        con = getConnection();
         PreparedStatement statement;
         int result = 0;
         try {
@@ -82,7 +84,7 @@ public class DriverUtil {
      **/
     public List<JSONObject> find(String sql, Object... params){
 
-        initConnection();
+        con = getConnection();
         List<JSONObject> ls = new ArrayList<>();
         PreparedStatement statement;
         try {
@@ -113,18 +115,17 @@ public class DriverUtil {
 
     public JSONObject findOne(String sql, Object... params){
 
-        initConnection();
         List<JSONObject> ls = find(sql, params);
         return ls.isEmpty() ? new JSONObject() : ls.get(0);
     }
 
     public List<String> getTables() {
 
-        initConnection();
         List<String> ls;
         if (url.contains("jdbc:hive2")) {
             ls = find("show tables").stream().map(s -> s.getString("tab_name")).collect(Collectors.toList());
         } else {
+
             String dbName =url.substring(url.lastIndexOf("/") + 1, url.lastIndexOf("?"));
             String infoMysqlUrl = url.replaceAll(dbName, "information_schema");
             DriverUtil infoMysqlUtil = getInstance(infoMysqlUrl, userName, pwd);
@@ -140,7 +141,7 @@ public class DriverUtil {
      **/
     public boolean insertSelective(String tbName, JSONObject bean) {
 
-        initConnection();
+        con = getConnection();
         String sql = "insert into " + tbName + " (";
         List<Object> values = new ArrayList<>();
         for (Map.Entry<String, Object> entry : bean.entrySet()) {
@@ -163,48 +164,57 @@ public class DriverUtil {
     }
 
 
-    private void initConnection() {
+    private void initDataSource() {
 
-        if (con == null) {
-            try {
-                synchronized (DriverUtil.class) {
+        if (dataSource == null || dataSource.isClosed()) {
 
-                    if (con == null) {
+            String key = url;
 
-                        userName = userName == null ? "" : userName;
-                        pwd = pwd == null ? "" : pwd;
-                        String key = url + "_" + userName + "_" + pwd;
-
-                        if (pool.containsKey(key)) {
-
-                            con = pool.get(key);
-                            if (con == null || con.isClosed()) {
-                                pool.remove(key);
-                            } else {
-                                return;
-                            }
-                        }
-
-                        String className = "com.mysql.jdbc.Driver";
-                        if (url.contains("jdbc:dm:")) {
-                            className = "dm.jdbc.driver.DmDriver";
-                        } else if (url.contains("jdbc:hive")) {
-                            className = "org.apache.hive.jdbc.HiveDriver";
-                        }
-
-                        Class.forName(className);
-                        con = DriverManager.getConnection(url, userName, pwd);
-                        pool.put(key, con);
-                    }
+            if (pool.containsKey(key)) {
+                dataSource = pool.get(key);
+                if (dataSource == null || dataSource.isClosed()) {
+                    pool.remove(key);
+                } else {
+                    return;
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
-                throw ServiceException.newInstance(50050, "datasource connect error!");
             }
+
+            HikariConfig config = new HikariConfig();
+            config.setJdbcUrl(url);
+            config.setUsername(userName);
+            config.setPassword(pwd);
+
+            String driveClassName = "com.mysql.jdbc.Driver";
+            if (url.contains("jdbc:dm:")) {
+                driveClassName = "dm.jdbc.driver.DmDriver";
+            } else if (url.contains("jdbc:hive")) {
+                driveClassName = "org.apache.hive.jdbc.HiveDriver";
+            }
+            config.setDriverClassName(driveClassName);
+            config.setConnectionTestQuery("SELECT 1");
+            config.setMinimumIdle(10);
+            config.setMaximumPoolSize(20);
+            config.setConnectionTimeout(20000);
+            config.setValidationTimeout(2000);
+            config.setMaxLifetime(3600000);
+            config.addDataSourceProperty("cachePrepStmts", "true");
+            config.addDataSourceProperty("prepStmtCacheSize", "250");
+            config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+            config.addDataSourceProperty("useServerPrepStmts", "true");
+
+            dataSource = new HikariDataSource(config);
+            pool.put(key, dataSource);
         }
     }
 
-    public Connection getClient() {
-        return con;
+    public Connection getConnection() {
+
+        initDataSource();
+        try {
+            return dataSource.getConnection();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("get connection error");
+        }
     }
 }
