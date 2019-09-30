@@ -37,7 +37,7 @@ public class MongoUtil {
     private volatile MongoClient client;
     private static volatile Map<String, MongoClient> pool = new HashMap<>(10);
 
-    private static final Integer BATCH_SIZE = 1000;
+    private static final Integer BATCH_SIZE = 5000;
 
     public static MongoUtil getInstance(String ip, Integer port) {
 
@@ -214,22 +214,23 @@ public class MongoUtil {
 
         initClient();
         List<Document> indexLs = fromMongo.getIndex(fromDbName, fromColName);
-        // 复制索引
+
         toMongo.createIndex(toDbName, toColName,  indexLs.toArray(new Document[0]));
-        // 一万条批量插入
-        int pageNo = 1, pageSize = 10000;
-        while (true) {
-            MongoCursor<Document> cursor = fromMongo.find(fromDbName, fromColName, null, null, pageNo, pageSize);
-            if (!cursor.hasNext()) {
-                break;
+
+        MongoCursor<Document> cursor = fromMongo.find(fromDbName, fromColName, null, null);
+
+        List<Document> docLs = new ArrayList<>();
+
+        cursor.forEachRemaining(doc -> {
+
+            docLs.add(doc);
+            if (docLs.size() >= BATCH_SIZE) {
+                toMongo.insertMany(toDbName, toColName, docLs);
+                docLs.clear();
             }
-            List<Document> docLs = new ArrayList<>();
-            while (cursor.hasNext()) {
-                docLs.add(cursor.next());
-            }
-            toMongo.insertMany(toDbName, toColName, docLs);
-            pageNo ++;
-        }
+        });
+
+        toMongo.insertMany(toDbName, toColName, docLs);
     }
 
     public String uploadFile(String fileDatabase, String fileCol, String fileName, InputStream in) {
