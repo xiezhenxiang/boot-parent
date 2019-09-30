@@ -242,6 +242,9 @@ public class EsRestUtil {
         }
     }
 
+    /**
+     * remove all data of index
+     **/
     public void clearIndex(String index, String type) {
 
         String query = "{\"match_all\":{}}";
@@ -534,6 +537,7 @@ public class EsRestUtil {
         if (client != null) {
             try {
                 client.close();
+                client = null;
             } catch (IOException e) {
                 e.printStackTrace();
             }
