@@ -41,7 +41,7 @@ public class TimeUtil {
 
     /** 时间戳转LocalDateTime */
     public static LocalDateTime stampToDate(Long timestamp) {
-        return LocalDateTime.ofInstant(Instant.ofEpochSecond(timestamp), TimeZone.getDefault().toZoneId());
+        return LocalDateTime.ofInstant(Instant.ofEpochMilli(timestamp), TimeZone.getDefault().toZoneId());
     }
 
     /** LocalDateTime转时间戳 */
