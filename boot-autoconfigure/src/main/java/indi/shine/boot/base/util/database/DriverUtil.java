@@ -137,7 +137,6 @@ public class DriverUtil {
 
     public boolean insertSelective(String tbName, JSONObject bean) {
 
-        con = getConnection();
         String sql = "insert into " + tbName + " (";
         List<Object> values = new ArrayList<>();
         for (Map.Entry<String, Object> entry : bean.entrySet()) {
@@ -161,7 +160,6 @@ public class DriverUtil {
 
         List<String> queryFieldLs = Lists.newArrayList(queryField);
 
-        con = getConnection();
         String sql = "update " + tbName + " set ";
         List<Object> values = new ArrayList<>();
 
