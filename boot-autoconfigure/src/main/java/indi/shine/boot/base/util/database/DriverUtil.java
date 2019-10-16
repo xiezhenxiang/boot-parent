@@ -4,9 +4,11 @@ import com.alibaba.fastjson.JSONObject;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import indi.shine.boot.base.exception.ServiceException;
+import org.assertj.core.util.Lists;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +53,6 @@ public class DriverUtil {
 
     /**
      * 增删改
-     * @author xiezhenxiang 2019/5/14
      * @param sql sql语句
      * @param params 参数
      **/
@@ -78,7 +79,6 @@ public class DriverUtil {
 
     /**
      * 查找
-     * @author xiezhenxiang 2019/5/14
      * @param sql sql语句
      * @param params 参数
      **/
@@ -135,10 +135,6 @@ public class DriverUtil {
         return ls;
     }
 
-    /**
-     * 插入数据
-     * @author xiezhenxiang 2019/6/1
-     **/
     public boolean insertSelective(String tbName, JSONObject bean) {
 
         con = getConnection();
@@ -156,10 +152,41 @@ public class DriverUtil {
                 sql += "?, ";
             }
             sql = sql.substring(0, sql.length() - 2) + ")";
-        } else {
-            return true;
+            update(sql, values.toArray());
         }
-        update(sql, values.toArray());
+        return true;
+    }
+
+    public boolean updateSelective(String tbName, JSONObject bean, String... queryField) {
+
+        List<String> queryFieldLs = Lists.newArrayList(queryField);
+
+        con = getConnection();
+        String sql = "update " + tbName + " set ";
+        List<Object> values = new ArrayList<>();
+
+        for (Map.Entry<String, Object> entry : bean.entrySet()) {
+            if (!queryFieldLs.contains(entry.getKey()) && entry.getValue() != null) {
+                sql += entry.getKey() + " = ? , ";
+                values.add(entry.getValue());
+            }
+        }
+
+        if (!values.isEmpty()) {
+
+            sql = sql.substring(0, sql.length() - 2);
+            if (!queryFieldLs.isEmpty()) {
+                sql += " where ";
+                for (String field : queryFieldLs) {
+                    sql += field + " = ? and ";
+                    values.add(bean.get(field));
+                }
+
+                sql = sql.substring(0, sql.length() - 5);
+            }
+            return update(sql, values.toArray());
+        }
+
         return true;
     }
 
@@ -216,5 +243,18 @@ public class DriverUtil {
             e.printStackTrace();
             throw new RuntimeException("get connection error");
         }
+    }
+
+    public static void main(String[] args) {
+
+        DriverUtil driverUtil = DriverUtil.getMysqlInstance("192.168.4.11", 3306, "plantdata_manage", "root", "root@hiekn");
+
+        JSONObject obj = new JSONObject();
+        obj.put("name", "name");
+        obj.put("phone", "123");
+        obj.put("age", 18);
+        obj.put("date", new Date());
+        driverUtil.updateSelective("t_snapshot", obj, "name", "phone");
+
     }
 }
