@@ -25,8 +25,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static indi.shine.boot.base.util.AlgorithmUtil.elfHash;
-
 /**
  * @author xiezhenxiang 2019/4/17
  */
