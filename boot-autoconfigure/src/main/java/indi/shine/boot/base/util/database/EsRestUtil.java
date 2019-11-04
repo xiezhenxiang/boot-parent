@@ -2,10 +2,13 @@ package indi.shine.boot.base.util.database;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.JSONPath;
 import indi.shine.boot.base.exception.ServiceException;
 import indi.shine.boot.base.util.Snowflake;
+import indi.shine.boot.base.util.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.nio.reactor.IOReactorConfig;
@@ -16,10 +19,9 @@ import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Low Level RestClient support es 5.x
@@ -31,6 +33,9 @@ public class EsRestUtil {
     private RestClient client;
     private HttpHost[] hosts;
     private volatile static ConcurrentHashMap<String, RestClient> pool = new ConcurrentHashMap<>(10);
+
+    private static HttpAsyncResponseConsumerFactory.HeapBufferedResponseConsumerFactory consumerFactory =
+            new HttpAsyncResponseConsumerFactory.HeapBufferedResponseConsumerFactory(200 * 1024 * 1024);
 
     public static EsRestUtil getInstance(HttpHost... hosts) {
 
@@ -45,7 +50,7 @@ public class EsRestUtil {
         initClient();
         String endpoint ="/" + index;
         NStringEntity entity = new NStringEntity(mapping, ContentType.APPLICATION_JSON);
-        try {
+        try {   
             client.performRequest("PUT", endpoint, Collections.emptyMap(), entity);
         } catch (IOException e) {
             log.error(e.getMessage());
@@ -320,7 +325,7 @@ public class EsRestUtil {
         }
     }
 
-    private void bulkInsert(String index, String type, Collection<JSONObject> ls) {
+    public void bulkInsert(String index, String type, Collection<JSONObject> ls) {
 
         initClient();
         if (ls.isEmpty()) {
@@ -447,23 +452,109 @@ public class EsRestUtil {
     }
 
 
-
-    public void find(String index, String type, Integer pageNo, Integer pageSize, String query, String sort) {
+    /**
+     * 深度检索，建议1w数据量以下使用
+     */
+    public String findByQuery(String index, String type, Integer pageNo, Integer pageSize, String query, String sort) {
 
         initClient();
-        HttpAsyncResponseConsumerFactory.HeapBufferedResponseConsumerFactory consumerFactory =
-                new HttpAsyncResponseConsumerFactory.HeapBufferedResponseConsumerFactory(200 * 1024 * 1024);
+        Objects.requireNonNull(pageNo, "pageNo is null!");
+        Objects.requireNonNull(pageSize, "pageSize is null!");
+
+        String rs = null;
+        JSONObject paraData = new JSONObject();
+        paraData.put("from", (pageNo - 1) * pageSize);
+        paraData.put("size", pageSize);
+        if (StringUtils.isNotBlank(query)) {
+            paraData.put("query", JSONObject.parseObject(query));
+        }
+        if (StringUtils.isNoneBlank(sort)) {
+            paraData.put("sort", JSONArray.parseObject(query));
+        }
+
+        String endpoint = StringUtils.isNoneBlank(type) ? "/" + index + "/" + type : "/" + index;
+        endpoint += "/_search";
+
+        try {
+            NStringEntity entity = new NStringEntity(paraData.toJSONString(), ContentType.APPLICATION_JSON);
+            Response response = client.performRequest("POST", endpoint, Collections.emptyMap(), entity, consumerFactory);
+            rs = EntityUtils.toString(response.getEntity(), "utf-8");
+            rs = JSONPath.read(rs, "hits.hits").toString();
+        } catch (IOException e) {
+            log.error(e.getMessage());
+            exit("elastic search docs fail!");
+        }
+
+        return rs;
     }
 
-    public static void main(String[] args) {
+    /**
+     * 游标检索全量数据,配合循环使用，第一次传scrollId为null,第二次传返回的scrollId,直到数据读完位置（rs[1].length <= 2）
+     */
+    public String[] findByScroll(String index, String type, String query, String sort, Integer size, String scrollId) {
+
+        initClient();
+        Objects.requireNonNull(size, "size is null");
+
+        String rs = "";
+        JSONObject paraData = new JSONObject();
+        String endpoint;
+        if (scrollId == null) {
+
+            if (StringUtils.isNotBlank(query)) {
+                paraData.put("query", JSONObject.parseObject(query));
+            }
+            if (StringUtils.isNoneBlank(sort)) {
+                paraData.put("sort", JSONArray.parseObject(query));
+            }
+            paraData.put("size", size);
+
+            endpoint = StringUtils.isNoneBlank(type) ? "/" + index + "/" + type : "/" + index;
+            endpoint += "/_search?scroll=5m";
+        } else {
+
+            endpoint = "/_search/scroll";
+            paraData.put("scroll", "5m");
+            paraData.put("scroll_id", scrollId);
+        }
+
+        try {
+            NStringEntity entity = new NStringEntity(paraData.toJSONString(), ContentType.APPLICATION_JSON);
+            Response response = client.performRequest("POST", endpoint, Collections.emptyMap(), entity, consumerFactory);
+            rs = EntityUtils.toString(response.getEntity(), "utf-8");
+            scrollId = JSONPath.read(rs, "_scroll_id").toString();
+            rs = JSONPath.read(rs, "hits.hits").toString();
+
+            if (rs.length() <= 2) {
+                System.out.println("delete scroll");
+                endpoint = "/_search/scroll/" + scrollId;
+                client.performRequest("DELETE", endpoint);
+            }
+        } catch (IOException e) {
+            log.error(e.getMessage());
+            exit("elastic search by scroll fail!");
+        }
+
+        return new String[] {scrollId, rs};
+    }
+
+
+
+    public static void main(String[] args) throws Exception {
 
         EsRestUtil restClient = getInstance(new HttpHost("192.168.4.11", 9200));
-        JSONObject doc = new JSONObject();
-        doc.put("title", "update4");
-        doc.put("name1", "update4");
-        doc.put("_id", "123");
 
-        restClient.reindex("kg_gw_help_test", null, "kg_gw_help_test");
+        String[] rs = restClient.findByScroll("kg_gw_help_test22", "data", null, null, 10000, null);
+
+        int i = 1;
+        while (rs[1].length() > 2) {
+
+            String str = rs[1];
+            String scrollId = rs[0];
+            System.out.println(i ++);
+            rs = restClient.findByScroll("kg_gw_help_test22", "data", null, null, 5000, rs[0]);
+        }
+
     }
 
     private EsRestUtil(HttpHost... hosts) {
@@ -494,7 +585,7 @@ public class EsRestUtil {
                             .setRequestConfigCallback(request -> {
                                 request.setConnectTimeout(1000 * 5);
                                 request.setConnectionRequestTimeout(1000 * 5);
-                                request.setSocketTimeout(1000 * 60);
+                                request.setSocketTimeout(1000 * 60 * 2);
                                 return request;
                             })
                             .setHttpClientConfigCallback(s ->
