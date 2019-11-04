@@ -317,8 +317,8 @@ public class MongoUtil {
 
                         String[] ips = ip.split(",");
                         List<ServerAddress> urlList = new ArrayList<>();
-                        for (String url : ips) {
-                            urlList.add(new ServerAddress(url, port));
+                        for (String ip : ips) {
+                            urlList.add(new ServerAddress(ip, port));
                         }
 
                         client = new MongoClient(urlList, options);
