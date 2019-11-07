@@ -526,7 +526,6 @@ public class EsRestUtil {
             rs = JSONPath.read(rs, "hits.hits").toString();
 
             if (rs.length() <= 2) {
-                System.out.println("delete scroll");
                 endpoint = "/_search/scroll/" + scrollId;
                 client.performRequest("DELETE", endpoint);
             }
