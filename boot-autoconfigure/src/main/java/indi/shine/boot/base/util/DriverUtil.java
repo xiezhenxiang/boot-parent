@@ -3,7 +3,6 @@ package indi.shine.boot.base.util;
 import com.alibaba.fastjson.JSONObject;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import indi.shine.boot.base.exception.ServiceException;
 import org.assertj.core.util.Lists;
 
 import java.sql.*;
@@ -12,10 +11,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import static indi.shine.boot.base.util.AlgorithmUtil.elfHash;
 
 /**
  * support mysql, hive, dm
@@ -253,6 +250,5 @@ public class DriverUtil {
         obj.put("age", 18);
         obj.put("date", new Date());
         driverUtil.updateSelective("t_snapshot", obj, "name", "phone");
-
     }
 }
