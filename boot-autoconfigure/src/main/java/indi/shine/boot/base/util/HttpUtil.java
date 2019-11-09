@@ -101,6 +101,7 @@ public final class HttpUtil {
         try {
             HttpURLConnection conn = openConnection(url, null);
             conn.setRequestMethod(method);
+            conn.setUseCaches(false);
             conn.setDoOutput(true);
             if (head != null) {
                 for (Map.Entry<String, String> entry : head.entrySet()) {
