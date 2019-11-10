@@ -294,7 +294,9 @@ public final class HttpUtil {
         str = str.replace("%3A", ":")
                 .replaceAll("%2F", "/")
                 .replaceAll("%3F", "?")
-                .replaceAll("%3D", "=");
+                .replaceAll("%3D", "=")
+                .replaceAll(" ", "%20");
+
         return str;
     }
 
