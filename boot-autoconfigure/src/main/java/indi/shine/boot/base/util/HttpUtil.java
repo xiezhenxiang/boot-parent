@@ -60,10 +60,6 @@ public final class HttpUtil {
             }
         }
 
-        if (head == null || !head.containsKey("Accept")) {
-            conn.setRequestProperty("Accept", JSON_CONTENT_TYPE);
-
-        }
         return httpConn;
     }
 
