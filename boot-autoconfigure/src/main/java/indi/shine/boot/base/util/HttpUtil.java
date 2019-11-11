@@ -48,7 +48,7 @@ public final class HttpUtil {
         conn.setRequestProperty("User-Agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1;SV1)");
         conn.setRequestProperty("Charset", ENCODE);
         conn.setConnectTimeout(8 * 1000);
-        conn.setReadTimeout(15 * 1000);
+        conn.setReadTimeout(30 * 1000);
         conn.setDoInput(true);
         HttpURLConnection httpConn = (HttpURLConnection) conn;
         // 设置自动执行重定向
