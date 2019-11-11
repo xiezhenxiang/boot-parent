@@ -35,7 +35,7 @@ public class MongoUtil {
     private volatile MongoClient client;
     private static volatile Map<String, MongoClient> pool = new HashMap<>(10);
 
-    private static final Integer BATCH_SIZE = 5000;
+    private Integer batchSize = 3000;
 
     public static MongoUtil getInstance(String ip, Integer port) {
 
@@ -74,7 +74,7 @@ public class MongoUtil {
         if (pageSize != null) {
             findIterable.limit(pageSize);
         }
-        mongoCursor = findIterable.batchSize(BATCH_SIZE).maxAwaitTime(10L, TimeUnit.MINUTES).iterator();
+        mongoCursor = findIterable.batchSize(batchSize).maxAwaitTime(10L, TimeUnit.MINUTES).iterator();
         return mongoCursor;
     }
 
@@ -222,7 +222,7 @@ public class MongoUtil {
         cursor.forEachRemaining(doc -> {
 
             docLs.add(doc);
-            if (docLs.size() >= BATCH_SIZE) {
+            if (docLs.size() >= batchSize) {
                 toMongo.insertMany(toDbName, toColName, docLs);
                 docLs.clear();
             }
@@ -338,5 +338,10 @@ public class MongoUtil {
 
         initClient();
         return client;
+    }
+
+    public void bachSize(int batch) {
+
+        this.batchSize = batch;
     }
 }
