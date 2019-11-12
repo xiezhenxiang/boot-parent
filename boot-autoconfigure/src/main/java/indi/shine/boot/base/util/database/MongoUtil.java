@@ -62,7 +62,6 @@ public class MongoUtil {
     public MongoCursor<Document> find(String db, String col, Bson query, Bson sort, Integer pageNo, Integer pageSize) {
 
         initClient();
-        MongoCursor<Document> mongoCursor = null;
         query = query == null ? new Document() : query;
         sort = sort == null ? new Document() : sort;
 
@@ -74,8 +73,14 @@ public class MongoUtil {
         if (pageSize != null) {
             findIterable.limit(pageSize);
         }
-        mongoCursor = findIterable.batchSize(batchSize).maxAwaitTime(10L, TimeUnit.MINUTES).iterator();
-        return mongoCursor;
+        return findIterable.batchSize(batchSize).maxAwaitTime(10L, TimeUnit.MINUTES).iterator();
+    }
+
+    public MongoCursor<Document> aggregate(String db, String col, List<Bson> aggLs) {
+
+        initClient();
+        return client.getDatabase(db).getCollection(col).aggregate(aggLs).useCursor(true).batchSize(batchSize).useCursor(true)
+                .maxTime(10L, TimeUnit.MINUTES).iterator();
     }
 
     public void insertMany(String database, String collection, List<Document> documentList) {
