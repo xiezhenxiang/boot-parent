@@ -3,19 +3,12 @@ package indi.shine.boot.base.util.database;
 import com.alibaba.fastjson.JSONObject;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import indi.shine.boot.base.exception.ServiceException;
 import org.assertj.core.util.Lists;
 
 import java.sql.*;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
 import java.util.stream.Collectors;
-
-import static indi.shine.boot.base.util.AlgorithmUtil.elfHash;
 
 /**
  * support mysql, hive, dm
