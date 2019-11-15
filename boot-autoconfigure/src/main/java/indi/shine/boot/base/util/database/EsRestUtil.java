@@ -384,7 +384,7 @@ public class EsRestUtil {
     }
 
     /**
-     * 根据id批量插入更新
+     * 根据id批量删除
      * @author xiezhenxiang 2019/9/9
      **/
     public void bulkDeleteById(String index, String type, Collection<JSONObject> ls) {

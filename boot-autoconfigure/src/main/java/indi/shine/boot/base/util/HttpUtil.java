@@ -295,6 +295,7 @@ public final class HttpUtil {
                 .replaceAll("%2F", "/")
                 .replaceAll("%3F", "?")
                 .replaceAll("%3D", "=")
+                .replaceAll("%26", "&")
                 .replaceAll(" ", "%20");
 
         return str;
