@@ -45,6 +45,25 @@ public class EsRestUtil {
         return new EsRestUtil(hosts);
     }
 
+    public boolean exists(String index, String type) {
+
+        initClient();
+        String endpoint = "/" + index;
+        if (StringUtils.isNotBlank(type)) {
+            endpoint += "/" + type;
+        }
+
+        boolean success = false;
+        try {
+            Response response = client.performRequest("HEAD", endpoint);
+            success = response.getStatusLine().getStatusCode() == 200;
+        } catch (IOException e) {
+            log.error(e.getMessage());
+            exit("elastic send head index fail!");
+        }
+        return success;
+    }
+
     public void createIndex(String index, String mapping) {
 
         initClient();
