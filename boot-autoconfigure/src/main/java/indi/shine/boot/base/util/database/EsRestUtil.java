@@ -387,21 +387,15 @@ public class EsRestUtil {
      * 根据id批量删除
      * @author xiezhenxiang 2019/9/9
      **/
-    public void bulkDeleteById(String index, String type, Collection<JSONObject> ls) {
+    public void bulkDeleteById(String index, String type, Collection<String> ids) {
 
         initClient();
-        if (ls.isEmpty()) {
+        if (ids.isEmpty()) {
             return;
         }
         StringBuffer buffer = new StringBuffer();
-        ls.forEach(s -> {
-
-            String id = s.getString("_id");
-            if (id != null) {
-                buffer.append("{\"delete\":{\"_index\":\"" + index + "\",\"_type\":\"" + type + "\",\"_id\":\"" + id + "\"}}\n");
-                s.remove("_id");
-                buffer.append(s.toJSONString() + "\n");
-            }
+        ids.forEach(s -> {
+            buffer.append("{\"delete\":{\"_index\":\"").append(index).append("\",\"_type\":\"").append(type).append("\",\"_id\":\"").append(s).append("\"}}\n");
         });
 
         String endpoint = "/_bulk";
