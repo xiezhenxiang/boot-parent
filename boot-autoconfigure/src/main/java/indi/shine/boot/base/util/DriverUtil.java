@@ -262,6 +262,5 @@ public class DriverUtil {
         obj.put("age", 18);
         obj.put("date", new Date());
         driverUtil.updateSelective("t_snapshot", obj, "name", "phone");
-
     }
 }
