@@ -10,6 +10,8 @@ import java.util.Date;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.concurrent.TimeUnit.MINUTES;
+
 /**
  * support mysql, hive, dm
  * @author xiezhenxiang 2019/8/1
@@ -211,10 +213,12 @@ public class DriverUtil {
             config.setDriverClassName(driveClassName);
             config.setConnectionTestQuery("SELECT 1");
             config.setMinimumIdle(10);
+            config.setMaximumPoolSize(10);
             config.setMaximumPoolSize(20);
-            config.setConnectionTimeout(20000);
-            config.setValidationTimeout(2000);
-            config.setMaxLifetime(3600000);
+            config.setConnectionTimeout(30000);
+            config.setValidationTimeout(5000);
+            config.setMaxLifetime(MINUTES.toMillis(30));
+            config.setIdleTimeout(MINUTES.toMillis(10));
             config.addDataSourceProperty("cachePrepStmts", "true");
             config.addDataSourceProperty("prepStmtCacheSize", "250");
             config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
