@@ -22,7 +22,6 @@ public class DriverUtil {
     private String url;
     private String userName;
     private String pwd;
-    private Connection con;
     private static Map<String, HikariDataSource> pool = new HashMap<>();
 
     public static DriverUtil getInstance(String url, String userName, String pwd ) {
@@ -53,7 +52,7 @@ public class DriverUtil {
      **/
     public boolean update(String sql, Object... params) {
 
-        con = getConnection();
+        Connection con = getConnection();
         PreparedStatement statement;
         int result = 0;
         try {
@@ -68,6 +67,8 @@ public class DriverUtil {
             result = statement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            close(con);
         }
         return result > 0;
     }
@@ -79,7 +80,7 @@ public class DriverUtil {
      **/
     public List<JSONObject> find(String sql, Object... params){
 
-        con = getConnection();
+        Connection con = getConnection();
         List<JSONObject> ls = new ArrayList<>();
         PreparedStatement statement;
         try {
@@ -104,6 +105,8 @@ public class DriverUtil {
             }
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            close(con);
         }
         return ls;
     }
@@ -213,9 +216,8 @@ public class DriverUtil {
             config.setDriverClassName(driveClassName);
             config.setConnectionTestQuery("SELECT 1");
             config.setMinimumIdle(10);
-            config.setMaximumPoolSize(10);
             config.setMaximumPoolSize(20);
-            config.setConnectionTimeout(30000);
+            config.setConnectionTimeout(3000);
             config.setValidationTimeout(5000);
             config.setMaxLifetime(MINUTES.toMillis(30));
             config.setIdleTimeout(MINUTES.toMillis(10));
@@ -237,6 +239,15 @@ public class DriverUtil {
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("get connection error");
+        }
+    }
+
+    private void close(Connection con) {
+        try {
+            con.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("driver connection close error");
         }
     }
 
