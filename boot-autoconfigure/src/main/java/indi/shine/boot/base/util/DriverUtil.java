@@ -6,12 +6,11 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.assertj.core.util.Lists;
 
 import java.sql.*;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static java.util.concurrent.TimeUnit.MINUTES;
 
 
 /**
@@ -24,7 +23,6 @@ public class DriverUtil {
     private String url;
     private String userName;
     private String pwd;
-    private Connection con;
     private static Map<String, HikariDataSource> pool = new HashMap<>();
 
     public static DriverUtil getInstance(String url, String userName, String pwd ) {
@@ -55,7 +53,7 @@ public class DriverUtil {
      **/
     public boolean update(String sql, Object... params) {
 
-        con = getConnection();
+        Connection con = getConnection();
         PreparedStatement statement;
         int result = 0;
         try {
@@ -70,8 +68,9 @@ public class DriverUtil {
             result = statement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            close(con);
         }
-
         return result > 0;
     }
 
@@ -82,7 +81,7 @@ public class DriverUtil {
      **/
     public List<JSONObject> find(String sql, Object... params){
 
-        con = getConnection();
+        Connection con = getConnection();
         List<JSONObject> ls = new ArrayList<>();
         PreparedStatement statement;
         try {
@@ -107,6 +106,8 @@ public class DriverUtil {
             }
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            close(con);
         }
         return ls;
     }
@@ -216,10 +217,11 @@ public class DriverUtil {
             config.setDriverClassName(driveClassName);
             config.setConnectionTestQuery("SELECT 1");
             config.setMinimumIdle(10);
-            config.setMaximumPoolSize(5);
-            config.setConnectionTimeout(20000);
-            config.setValidationTimeout(2000);
-            config.setMaxLifetime(3600000);
+            config.setMaximumPoolSize(20);
+            config.setConnectionTimeout(3000);
+            config.setValidationTimeout(5000);
+            config.setMaxLifetime(MINUTES.toMillis(30));
+            config.setIdleTimeout(MINUTES.toMillis(10));
             config.addDataSourceProperty("cachePrepStmts", "true");
             config.addDataSourceProperty("prepStmtCacheSize", "250");
             config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
@@ -241,10 +243,25 @@ public class DriverUtil {
         }
     }
 
+    private void close(Connection con) {
+        try {
+            con.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("driver connection close error");
+        }
+    }
+
     public static void main(String[] args) {
 
         DriverUtil driverUtil = DriverUtil.getMysqlInstance("192.168.4.11", 3306, "plantdata_manage", "root", "root@hiekn");
-        driverUtil = DriverUtil.getMysqlInstance("192.168.4.11", 3306, "plantdata_manage", "root", "root@hiekn");
-        driverUtil = DriverUtil.getMysqlInstance("192.168.4.11", 3306, "plantdata_manage", "root", "root@hiekn");
+
+        JSONObject obj = new JSONObject();
+        obj.put("name", "name");
+        obj.put("phone", "123");
+        obj.put("age", 18);
+        obj.put("date", new Date());
+        driverUtil.updateSelective("t_snapshot", obj, "name", "phone");
+
     }
 }
