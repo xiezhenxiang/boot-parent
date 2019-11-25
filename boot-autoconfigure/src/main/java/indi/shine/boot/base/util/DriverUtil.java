@@ -71,6 +71,7 @@ public class DriverUtil {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
         return result > 0;
     }
 
@@ -215,7 +216,7 @@ public class DriverUtil {
             config.setDriverClassName(driveClassName);
             config.setConnectionTestQuery("SELECT 1");
             config.setMinimumIdle(10);
-            config.setMaximumPoolSize(20);
+            config.setMaximumPoolSize(5);
             config.setConnectionTimeout(20000);
             config.setValidationTimeout(2000);
             config.setMaxLifetime(3600000);
@@ -243,12 +244,7 @@ public class DriverUtil {
     public static void main(String[] args) {
 
         DriverUtil driverUtil = DriverUtil.getMysqlInstance("192.168.4.11", 3306, "plantdata_manage", "root", "root@hiekn");
-
-        JSONObject obj = new JSONObject();
-        obj.put("name", "name");
-        obj.put("phone", "123");
-        obj.put("age", 18);
-        obj.put("date", new Date());
-        driverUtil.updateSelective("t_snapshot", obj, "name", "phone");
+        driverUtil = DriverUtil.getMysqlInstance("192.168.4.11", 3306, "plantdata_manage", "root", "root@hiekn");
+        driverUtil = DriverUtil.getMysqlInstance("192.168.4.11", 3306, "plantdata_manage", "root", "root@hiekn");
     }
 }
