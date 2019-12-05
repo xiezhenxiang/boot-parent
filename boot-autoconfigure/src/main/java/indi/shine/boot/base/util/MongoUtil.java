@@ -99,13 +99,13 @@ public class MongoUtil {
     public void updateOne(String database, String collection, Bson query, Document doc) {
 
         initClient();
-        client.getDatabase(database).getCollection(collection).updateOne(query, new Document("$set", doc));
+        client.getDatabase(database).getCollection(collection).replaceOne(query, new Document("$set", doc));
     }
 
     public void upsertOne(String database, String collection, Bson query, Document doc) {
 
         initClient();
-        client.getDatabase(database).getCollection(collection).updateOne(query, doc, new UpdateOptions().upsert(true));
+        client.getDatabase(database).getCollection(collection).replaceOne(query, doc, new UpdateOptions().upsert(true));
     }
 
     public void upsertMany(String database, String collection, List<Document> ls, boolean upsert, String... fieldArr) {
