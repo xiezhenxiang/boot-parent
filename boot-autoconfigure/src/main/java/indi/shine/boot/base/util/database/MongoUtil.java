@@ -31,22 +31,39 @@ import java.util.stream.Collectors;
 public class MongoUtil {
 
     private String ip;
-    private Integer port;
+    private List<ServerAddress> urlList;
     private volatile MongoClient client;
     private static volatile Map<String, MongoClient> pool = new HashMap<>(10);
-
     private Integer batchSize = 3000;
-
-    public static MongoUtil getInstance(String ip, Integer port) {
-
-        return new MongoUtil(ip, port);
-    }
 
     private MongoUtil(String ip, Integer port) {
 
         this.ip = ip;
-        this.port = port;
+        String[] ips = ip.split(",");
+        urlList = new ArrayList<>();
+        for (String one : ips) {
+            urlList.add(new ServerAddress(one, port));
+        }
         initClient();
+    }
+
+    public MongoUtil(String hosts) {
+
+        StringBuilder ipStr = new StringBuilder();
+        urlList = new ArrayList<>();
+        String[] hostArr = hosts.split(",");
+        for (String one : hostArr) {
+            String[] ipPort = one.split(":");
+            ipStr.append(ipPort[0]).append(",");
+            urlList.add(new ServerAddress(ipPort[0], Integer.parseInt(ipPort[1])));
+        }
+        this.ip = ipStr.substring(0, ipStr.length() - 1);
+        initClient();
+    }
+
+    private MongoUtil(MongoClient mongoClient) {
+
+        this.client = mongoClient;
     }
 
     public MongoCursor<Document> find(String db, String col, Bson query, Bson sort) {
@@ -54,7 +71,7 @@ public class MongoUtil {
         return find(db, col, query, sort, null, null);
     }
 
-    public  MongoCursor<Document> find(String db, String col, Bson query) {
+    public MongoCursor<Document> find(String db, String col, Bson query) {
 
         return find(db, col, query, null, null, null);
     }
@@ -301,11 +318,10 @@ public class MongoUtil {
 
                 if (client == null) {
 
-                    String key = ip + ":" + port;
-                    if (pool.containsKey(key)) {
-                        client = pool.get(key);
+                    if (pool.containsKey(ip)) {
+                        client = pool.get(ip);
                         if (client == null) {
-                            pool.remove(key);
+                            pool.remove(ip);
                         } else {
                             return;
                         }
@@ -320,19 +336,12 @@ public class MongoUtil {
                                 .socketTimeout(120000)
                                 .build();
 
-                        String[] ips = ip.split(",");
-                        List<ServerAddress> urlList = new ArrayList<>();
-                        for (String ip : ips) {
-                            urlList.add(new ServerAddress(ip, port));
-                        }
-
                         client = new MongoClient(urlList, options);
-                        pool.put(key, client);
+                        pool.put(ip, client);
 
                     } catch (Exception e) {
-
                         e.printStackTrace();
-                        throw ServiceException.newInstance(50051, "mongo connect error!");
+                        throw new RuntimeException("mongodb connect error!");
                     }
                 }
             }
