@@ -36,7 +36,7 @@ public class MongoUtil {
     private static volatile Map<String, MongoClient> pool = new HashMap<>(10);
     private Integer batchSize = 3000;
 
-    private MongoUtil(String ip, Integer port) {
+    public MongoUtil(String ip, Integer port) {
 
         this.ip = ip;
         String[] ips = ip.split(",");
@@ -61,7 +61,7 @@ public class MongoUtil {
         initClient();
     }
 
-    private MongoUtil(MongoClient mongoClient) {
+    public MongoUtil(MongoClient mongoClient) {
 
         this.client = mongoClient;
     }
