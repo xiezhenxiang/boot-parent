@@ -1,10 +1,9 @@
 package indi.shine.boot.base.util.database;
 
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.collect.Lists;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import org.assertj.core.util.Lists;
-
 import java.sql.*;
 import java.util.Date;
 import java.util.*;
