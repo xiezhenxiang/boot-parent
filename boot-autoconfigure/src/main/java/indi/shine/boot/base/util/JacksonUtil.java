@@ -2,10 +2,14 @@ package indi.shine.boot.base.util;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.reflect.TypeToken;
+import org.assertj.core.util.Lists;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -86,12 +90,15 @@ public class JacksonUtil {
 
     public static void main(String[] args) {
 		try {
-			Map<String, String> map = new HashMap<>();
+			Map<String, Object> map = new HashMap<>();
 			map.put("aaa", "111");
-			map.put("bbb", "222");
+			map.put("bbb", 222);
 			String json = writeValueAsString(map);
 			System.out.println(json);
 			System.out.println(readValue(json, Map.class));
+			json = writeValueAsString(Lists.newArrayList(map));
+			List<Map<String, Object>> ls = readValue(json, List.class, Map.class);
+			System.out.println(writeValueAsString(ls));
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		}
