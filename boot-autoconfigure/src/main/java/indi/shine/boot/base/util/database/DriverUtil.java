@@ -4,6 +4,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import indi.shine.boot.base.util.AlgorithmUtil;
+
 import java.sql.*;
 import java.util.Date;
 import java.util.*;
@@ -190,7 +192,7 @@ public class DriverUtil {
 
         if (dataSource == null || dataSource.isClosed()) {
 
-            String key = url;
+            String key = AlgorithmUtil.elfHash(url + userName + pwd).toString();
 
             if (pool.containsKey(key)) {
                 dataSource = pool.get(key);
