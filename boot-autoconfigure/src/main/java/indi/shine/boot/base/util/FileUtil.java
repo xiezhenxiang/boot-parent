@@ -50,8 +50,7 @@ public class FileUtil {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException(e.toString());
+            throw new RuntimeException(e);
         }
     }
 
@@ -59,34 +58,38 @@ public class FileUtil {
      * 解压文件
      * @author xiezhenxiang 2019/12/21
      **/
-    public static void decompressZip(String inputFilePath, Charset charset, String outputDir) throws IOException {
+    public static void decompressZip(String inputFilePath, Charset charset, String outputDir) {
 
-        ZipFile zipFile = new ZipFile(inputFilePath, charset);
-        Enumeration<?> entries = zipFile.entries();
+        try {
+            ZipFile zipFile = new ZipFile(inputFilePath, charset);
+            Enumeration<?> entries = zipFile.entries();
 
-        while (entries.hasMoreElements()) {
+            while (entries.hasMoreElements()) {
 
-            ZipEntry entry = (ZipEntry) entries.nextElement();
-            if (entry.isDirectory()) {
-                String dirPath = outputDir + "/" + entry.getName();
-                File dir = new File(dirPath);
-                dir.mkdirs();
-            } else {
-                File targetFile = new File(outputDir + "/" + entry.getName());
-                if(!targetFile.getParentFile().exists()){
-                    targetFile.getParentFile().mkdirs();
+                ZipEntry entry = (ZipEntry) entries.nextElement();
+                if (entry.isDirectory()) {
+                    String dirPath = outputDir + "/" + entry.getName();
+                    File dir = new File(dirPath);
+                    dir.mkdirs();
+                } else {
+                    File targetFile = new File(outputDir + "/" + entry.getName());
+                    if(!targetFile.getParentFile().exists()){
+                        targetFile.getParentFile().mkdirs();
+                    }
+                    targetFile.createNewFile();
+                    InputStream is = zipFile.getInputStream(entry);
+                    FileOutputStream fos = new FileOutputStream(targetFile);
+                    int len;
+                    byte[] buf = new byte[1024 * 1024];
+                    while ((len = is.read(buf)) != -1) {
+                        fos.write(buf, 0, len);
+                    }
+                    fos.close();
+                    is.close();
                 }
-                targetFile.createNewFile();
-                InputStream is = zipFile.getInputStream(entry);
-                FileOutputStream fos = new FileOutputStream(targetFile);
-                int len;
-                byte[] buf = new byte[1024 * 1024];
-                while ((len = is.read(buf)) != -1) {
-                    fos.write(buf, 0, len);
-                }
-                fos.close();
-                is.close();
             }
+        }  catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 }
