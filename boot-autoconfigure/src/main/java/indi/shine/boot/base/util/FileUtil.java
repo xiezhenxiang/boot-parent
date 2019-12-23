@@ -63,9 +63,7 @@ public class FileUtil {
         try {
             ZipFile zipFile = new ZipFile(inputFilePath, charset);
             Enumeration<?> entries = zipFile.entries();
-
             while (entries.hasMoreElements()) {
-
                 ZipEntry entry = (ZipEntry) entries.nextElement();
                 if (entry.isDirectory()) {
                     String dirPath = outputDir + "/" + entry.getName();
