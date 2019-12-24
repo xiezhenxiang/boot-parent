@@ -1,6 +1,7 @@
 package indi.shine.boot.base.util;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
@@ -23,6 +24,9 @@ public class JacksonUtil {
 	private final static ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 	public static ObjectMapper getInstance() {
 		return OBJECT_MAPPER;
+	}
+	static {
+		OBJECT_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 	}
 
 	/**
