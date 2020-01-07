@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -33,7 +34,7 @@ public class MongoUtil {
     private String ip;
     private List<ServerAddress> urlList;
     private volatile MongoClient client;
-    private static volatile Map<String, MongoClient> pool = new HashMap<>(10);
+    private static volatile ConcurrentHashMap<String, MongoClient> pool = new ConcurrentHashMap<>(10);
     private Integer batchSize = 3000;
 
     public MongoUtil(String ip, Integer port) {

@@ -9,6 +9,7 @@ import indi.shine.boot.base.util.AlgorithmUtil;
 import java.sql.*;
 import java.util.Date;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -23,7 +24,7 @@ public class DriverUtil {
     private String url;
     private String userName;
     private String pwd;
-    private static Map<String, HikariDataSource> pool = new HashMap<>();
+    private static ConcurrentHashMap<String, HikariDataSource> pool = new ConcurrentHashMap<>();
 
     public static DriverUtil getInstance(String url, String userName, String pwd ) {
 
