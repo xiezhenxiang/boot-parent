@@ -1,11 +1,9 @@
 package indi.shine.boot.base.exception.handler;
 
-
-import indi.shine.boot.base.model.result.RestResp;
-import indi.shine.boot.base.util.ErrorMsgUtil;
+import indi.shine.boot.base.model.api.resp.ReturnT;
+import indi.shine.boot.base.util.CodeMsgUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -21,7 +19,7 @@ public final class WebApplicationExceptionHandler implements ExceptionMapper<Web
     @Override
     public Response toResponse(WebApplicationException exception) {
         int code = 80004;
-        String errMsg = ErrorMsgUtil.getErrMsg(code);
+        String errMsg = CodeMsgUtil.getMsg(code);
         Status statusCode = Status.OK;
         if (exception instanceof NotFoundException) {
             statusCode = Status.NOT_FOUND;
@@ -37,6 +35,6 @@ public final class WebApplicationExceptionHandler implements ExceptionMapper<Web
         }
 
         logger.error(code, exception);
-        return Response.ok(new RestResp(code, errMsg)).status(statusCode).type(MediaType.APPLICATION_JSON_TYPE).build();
+        return Response.ok(ReturnT.fail(code, errMsg)).status(statusCode).type(MediaType.APPLICATION_JSON_TYPE).build();
     }
 }

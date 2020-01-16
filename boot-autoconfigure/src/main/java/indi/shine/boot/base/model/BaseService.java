@@ -1,6 +1,6 @@
 package indi.shine.boot.base.model;
 
-import indi.shine.boot.base.model.result.RestData;
+import indi.shine.boot.base.model.api.resp.ReturnPage;
 import indi.shine.boot.base.model.search.QueryCondition;
 
 import java.util.List;
@@ -51,5 +51,5 @@ public interface BaseService<T, PK> {
      * @param page 分页信息
      * @return 返回查找结果
      **/
-    RestData<T> list(List<QueryCondition> qcList, List<QueryCondition> qoList, PageModel page);
+    ReturnPage<T> list(List<QueryCondition> qcList, List<QueryCondition> qoList, PageModel page);
 }

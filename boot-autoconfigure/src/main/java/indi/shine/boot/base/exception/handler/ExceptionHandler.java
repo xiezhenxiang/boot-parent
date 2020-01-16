@@ -1,7 +1,7 @@
 package indi.shine.boot.base.exception.handler;
 
-import indi.shine.boot.base.model.result.RestResp;
-import indi.shine.boot.base.util.ErrorMsgUtil;
+import indi.shine.boot.base.model.api.resp.ReturnT;
+import indi.shine.boot.base.util.CodeMsgUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -21,8 +21,8 @@ public final class ExceptionHandler implements ExceptionMapper<Exception> {
     @Override
     public Response toResponse(Exception exception) {
         Integer code = 90000;
-        String errMsg = ErrorMsgUtil.getErrMsg(code);
+        String errMsg = CodeMsgUtil.getMsg(code);
         logger.error(code, exception);
-        return Response.ok(new RestResp(code, errMsg)).type(MediaType.APPLICATION_JSON_TYPE).build();
+        return Response.ok(ReturnT.fail(code, errMsg)).type(MediaType.APPLICATION_JSON_TYPE).build();
     }
 }

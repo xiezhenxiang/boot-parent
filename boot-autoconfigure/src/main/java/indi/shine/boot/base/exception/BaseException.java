@@ -1,6 +1,6 @@
 package indi.shine.boot.base.exception;
 
-import indi.shine.boot.base.util.ErrorMsgUtil;
+import indi.shine.boot.base.util.CodeMsgUtil;
 
 /**
  * @author xiezhenxiang 2019/6/13
@@ -14,9 +14,9 @@ public class BaseException extends RuntimeException {
     }
 
     protected BaseException(Integer code, String msg) {
-        super(msg == null ? ErrorMsgUtil.getErrMsg(code) :  msg);
+        super(msg == null ? CodeMsgUtil.getMsg(code) :  msg);
         this.code = code;
-        this.msg = msg == null ? ErrorMsgUtil.getErrMsg(code) :  msg;
+        this.msg = msg == null ? CodeMsgUtil.getMsg(code) :  msg;
     }
 
     public Integer getCode() {

@@ -50,7 +50,7 @@ public class EsRestUtil {
         initClient();
         String endpoint = "/" + index;
         if (StringUtils.isNotBlank(type)) {
-            endpoint += "/" + type;
+            endpoint += "/_mapping/" + type;
         }
 
         boolean success = false;

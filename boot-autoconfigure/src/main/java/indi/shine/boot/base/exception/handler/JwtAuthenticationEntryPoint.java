@@ -28,11 +28,11 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         if (authException instanceof InvalidAuthenticationTokenException) {
             status = HttpStatus.UNAUTHORIZED;
             restResp.setErrorCode(Integer.valueOf(30016));
-            restResp.setErrorInfo(ErrorMsgUtil.getErrMsg(Integer.valueOf(30016)));
+            restResp.setErrorInfo(ErrorMsgUtil.getMsg(Integer.valueOf(30016)));
         } else {
             status = HttpStatus.FORBIDDEN;
             restResp.setErrorCode(Integer.valueOf(30012));
-            restResp.setErrorInfo(ErrorMsgUtil.getErrMsg(Integer.valueOf(30012)));
+            restResp.setErrorInfo(ErrorMsgUtil.getMsg(Integer.valueOf(30012)));
         }
 
         response.setStatus(status.value());

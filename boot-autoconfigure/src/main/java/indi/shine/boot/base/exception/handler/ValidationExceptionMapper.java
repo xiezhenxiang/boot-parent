@@ -2,8 +2,8 @@ package indi.shine.boot.base.exception.handler;
 
 
 import indi.shine.boot.base.model.ValidationErrorBean;
-import indi.shine.boot.base.model.result.RestResp;
-import indi.shine.boot.base.util.ErrorMsgUtil;
+import indi.shine.boot.base.model.api.resp.ReturnT;
+import indi.shine.boot.base.util.CodeMsgUtil;
 import com.google.common.collect.Lists;
 import org.glassfish.jersey.server.validation.ValidationError;
 import org.glassfish.jersey.server.validation.internal.ValidationHelper;
@@ -31,10 +31,7 @@ public final class ValidationExceptionMapper implements ExceptionMapper<Validati
 
     @Override
     public Response toResponse(ValidationException exception) {
-        RestResp<List<ValidationErrorBean>> rs = new RestResp<>();
-        rs.setCode(30001);
-        rs.setMsg(ErrorMsgUtil.getErrMsg(30001));
-
+        ReturnT<List<ValidationErrorBean>> rs = ReturnT.fail(30001, CodeMsgUtil.getMsg(30001));
         if (exception instanceof ConstraintViolationException) {
             ConstraintViolationException cve = (ConstraintViolationException)exception;
             ResponseBuilder response = Response.status(ValidationHelper.getResponseStatus(cve));
@@ -54,7 +51,7 @@ public final class ValidationExceptionMapper implements ExceptionMapper<Validati
                     list.add(validationErrorBean);
                 }
 
-                rs.setData(list);
+                rs.setContent(list);
             }
         }
 
