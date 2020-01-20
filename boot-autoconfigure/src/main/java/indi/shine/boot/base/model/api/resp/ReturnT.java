@@ -2,11 +2,11 @@ package indi.shine.boot.base.model.api.resp;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import indi.shine.boot.base.util.CodeMsgUtil;
-import indi.shine.boot.base.util.JacksonUtil;
+import indi.shine.boot.base.model.constant.BaseErrorCode;
+import indi.shine.boot.base.model.constant.ErrorCodeMsg;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
-import org.apache.commons.lang3.StringUtils;
+
 import java.io.Serializable;
 
 /**
@@ -20,9 +20,8 @@ public class ReturnT<T> implements Serializable  {
 
     private static final long serialVersionUID = 112L;
     private static final int SUCCESS_CODE = 200;
-    private static final int FAIL_CODE = 500;
     private static final String SUCCESS_MSG = "ok";
-    private static final String FAIL_MSG = "unknown error";
+
     private int code;
     private String msg;
     private T content;
@@ -47,7 +46,7 @@ public class ReturnT<T> implements Serializable  {
     }
 
     public static <T> ReturnT<T> fail() {
-        return new ReturnT<>(FAIL_CODE, FAIL_MSG);
+        return fail(BaseErrorCode.UNKNOWN_ERROR);
     }
 
     public static <T> ReturnT<T> fail(int code, String msg) {
@@ -55,14 +54,6 @@ public class ReturnT<T> implements Serializable  {
     }
 
     public static <T> ReturnT<T> fail(int code) {
-        String msg = CodeMsgUtil.getMsg(code);
-        if (StringUtils.isBlank(msg)) {
-            msg = FAIL_MSG;
-        }
-        return new ReturnT<>(code, msg);
-    }
-
-    public static void main(String[] args) {
-        System.out.println(JacksonUtil.writeValueAsString(ReturnT.fail()));
+        return new ReturnT<>(code, ErrorCodeMsg.of(code));
     }
 }

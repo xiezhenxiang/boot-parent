@@ -1,14 +1,10 @@
 package indi.shine.boot.base.util.database;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.JSONPath;
 import indi.shine.boot.base.exception.ServiceException;
+import indi.shine.boot.base.util.JacksonUtil;
 import indi.shine.boot.base.util.Snowflake;
-import indi.shine.boot.base.util.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.nio.reactor.IOReactorConfig;
@@ -21,7 +17,6 @@ import org.elasticsearch.client.RestClient;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Low Level RestClient support es 5.x
@@ -38,7 +33,6 @@ public class EsRestUtil {
             new HttpAsyncResponseConsumerFactory.HeapBufferedResponseConsumerFactory(200 * 1024 * 1024);
 
     public static EsRestUtil getInstance(HttpHost... hosts) {
-
         if (hosts.length == 0) {
             throw ServiceException.newInstance(60000, "elastic host is empty!");
         }
@@ -52,14 +46,13 @@ public class EsRestUtil {
         if (StringUtils.isNotBlank(type)) {
             endpoint += "/_mapping/" + type;
         }
-
         boolean success = false;
         try {
             Response response = client.performRequest("HEAD", endpoint);
             success = response.getStatusLine().getStatusCode() == 200;
         } catch (IOException e) {
-            log.error(e.getMessage());
-            exit("elastic send head index fail!");
+            log.error("elastic send head index fail!");
+            throw new RuntimeException(e);
         }
         return success;
     }
@@ -72,8 +65,8 @@ public class EsRestUtil {
         try {   
             client.performRequest("PUT", endpoint, Collections.emptyMap(), entity);
         } catch (IOException e) {
-            log.error(e.getMessage());
-            exit("elastic create index fail!");
+            log.error("elastic create index fail!");
+            throw new RuntimeException(e);
         }
     }
 
@@ -84,8 +77,8 @@ public class EsRestUtil {
         try {
             client.performRequest("DELETE", endpoint);
         } catch (IOException e) {
-            log.error(e.getMessage());
-            exit("elastic delete index fail!");
+            log.error("elastic delete index fail!");
+            throw new RuntimeException(e);
         }
     }
 
@@ -96,16 +89,14 @@ public class EsRestUtil {
     public void createMappings(String index, String mappings) {
 
         initClient();
-        JSONObject para = new JSONObject();
-        para.put("mappings", JSONObject.parseObject(mappings));
-
+        String entityStr = "{\"mappings\":" + mappings + "}";
         String endpoint ="/" + index;
-        NStringEntity entity = new NStringEntity(para.toJSONString(), ContentType.APPLICATION_JSON);
+        NStringEntity entity = new NStringEntity(entityStr, ContentType.APPLICATION_JSON);
         try {
             client.performRequest("PUT", endpoint, Collections.emptyMap(), entity);
         } catch (IOException e) {
-            log.error(e.getMessage());
-            exit("elastic create mappings fail!");
+            log.error("elastic create mappings fail!");
+            throw new RuntimeException(e);
         }
     }
 
@@ -122,8 +113,8 @@ public class EsRestUtil {
         try {
             client.performRequest("PUT", endpoint, Collections.emptyMap(), entity);
         } catch (IOException e) {
-            log.error(e.getMessage());
-            exit("elastic put mapping fail!");
+            log.error("elastic put mapping fail!");
+            throw new RuntimeException(e);
         }
     }
 
@@ -139,26 +130,23 @@ public class EsRestUtil {
 
         initClient();
         String endpoint ="/_reindex?slices=5";
-
-        JSONObject para = new JSONObject();
+        Map<String, Object> para = new HashMap<>();
         para.put("conflicts", "proceed");
-        JSONObject source = new JSONObject();
-        JSONObject dest = new JSONObject();
+        Map<String, Object> source = new HashMap<>();
+        Map<String, Object> dest = new HashMap<>();
 
         if (StringUtils.isNotBlank(sourceHostUri)) {
-
-            JSONObject remote = new JSONObject();
+            Map<String, Object> remote = new HashMap<>();
             remote.put("host", sourceHostUri);
             source.put("remote", remote);
         }
-
         source.put("index", sourceIndex);
 
         if (StringUtils.isNotBlank(sourceType)) {
             source.put("type", sourceType);
         }
         if (StringUtils.isNotBlank(query)) {
-            source.put("query", JSONObject.parseObject(query));
+            source.put("query", JacksonUtil.parseObject(query, HashMap.class));
         }
         if (batchSize != null) {
             source.put("size", batchSize);
@@ -170,30 +158,28 @@ public class EsRestUtil {
         dest.put("routing", "=cat");
         para.put("dest", dest);
         setRefreshInterval(destIndex, "30s");
-        NStringEntity entity = new NStringEntity(para.toJSONString(), ContentType.APPLICATION_JSON);
+        NStringEntity entity = new NStringEntity(JacksonUtil.toJsonString(para), ContentType.APPLICATION_JSON);
         try {
             client.performRequest("POST", endpoint, Collections.emptyMap(), entity);
         } catch (IOException e) {
-            log.error(e.getMessage());
-            exit("elastic reindex fail!");
+            log.error("elastic reindex fail!");
+            throw new RuntimeException(e);
         } finally {
             setRefreshInterval(sourceIndex, "1s");
         }
     }
 
-    private void setRefreshInterval(String index, Object interval) {
+    private void setRefreshInterval(String index, String interval) {
 
         initClient();
         String endpoint ="/" + index + "/_settings";
-        JSONObject para = new JSONObject();
-        para.put("refresh_interval", interval);
-
-        NStringEntity entity = new NStringEntity(para.toJSONString(), ContentType.APPLICATION_JSON);
+        String entityStr = "{\"refresh_interval\":\""+ interval +"\"}";
+        NStringEntity entity = new NStringEntity(entityStr, ContentType.APPLICATION_JSON);
         try {
             client.performRequest("PUT", endpoint, Collections.emptyMap(), entity);
         } catch (IOException e) {
-            log.error(e.getMessage());
-            exit("elastic set refresh_interval fail!");
+            log.error("elastic set refresh_interval fail!");
+            throw new RuntimeException(e);
         }
     }
 
@@ -208,29 +194,25 @@ public class EsRestUtil {
     private void actionAlias(String index, String action, String... aliases) {
 
         initClient();
-        JSONArray actions = new JSONArray();
-
+        List<Map> actions = new ArrayList<>();
         Arrays.stream(aliases).forEach(s -> {
-
-            JSONObject obj = new JSONObject();
-            obj.put("index", index);
-            obj.put("alias", s);
-            JSONObject actionObj = new JSONObject();
-            actionObj.put(action, obj);
-
-            actions.add(actionObj);
+            HashMap<String, Object> map = new HashMap<>();
+            map.put("index", index);
+            map.put("alias", s);
+            HashMap<String, Object> actionMap =new HashMap<>();
+            actionMap.put(action, map);
+            actions.add(actionMap);
         });
 
-        JSONObject paraData = new JSONObject();
+        HashMap<String, Object> paraData = new HashMap<>();
         paraData.put("actions", actions);
-
         String endpoint ="/_aliases";
-        NStringEntity entity = new NStringEntity(paraData.toJSONString(), ContentType.APPLICATION_JSON);
+        NStringEntity entity = new NStringEntity(JacksonUtil.toJsonString(paraData), ContentType.APPLICATION_JSON);
         try {
             client.performRequest("POST", endpoint, Collections.emptyMap(), entity);
         } catch (IOException e) {
-            log.error(e.getMessage());
-            exit("elastic " + action + " alias fail!");
+            log.error("elastic " + action + " alias fail!");
+            throw new RuntimeException(e);
         }
     }
 
@@ -238,31 +220,26 @@ public class EsRestUtil {
 
         initClient();
         String endpoint = "/" + index + "/" + type + "/" + id;
-
         try {
             client.performRequest("DELETE", endpoint, Collections.emptyMap());
         } catch (IOException e) {
-            log.error(e.getMessage());
-            exit("elastic delete doc fail!");
+            log.error("elastic delete doc fail!");
+            throw new RuntimeException(e);
         }
     }
 
     public void deleteByQuery(String index, String type, String queryStr) {
 
         initClient();
-        JSONObject paraData = new JSONObject();
-        paraData.put("query", JSONObject.parseObject(queryStr));
-
+        String entityStr = "{\"query\":\""+ queryStr +"\"}";
         String endpoint = StringUtils.isBlank(type) ? "/" + index : "/" + index + "/" + type;
         endpoint += "/_delete_by_query?refresh&conflicts=proceed";
-
-        NStringEntity entity = new NStringEntity(paraData.toJSONString(), ContentType.APPLICATION_JSON);
-
+        NStringEntity entity = new NStringEntity(entityStr, ContentType.APPLICATION_JSON);
         try {
             client.performRequest("POST", endpoint, Collections.emptyMap(), entity);
         } catch (IOException e) {
-            log.error(e.getMessage());
-            exit("elastic delete_by_query fail!");
+            log.error("elastic delete_by_query fail!");
+            throw new RuntimeException(e);
         }
     }
 
@@ -275,97 +252,86 @@ public class EsRestUtil {
         deleteByQuery(index, type, query);
     }
 
-    public void upsertById(String index, String type, String id, JSONObject doc) {
+    public void upsertById(String index, String type, String id, Map<String, Object> doc) {
 
         initClient();
         String endpoint = "/" + index + "/" + type + "/" + id;
-
-        NStringEntity entity = new NStringEntity(doc.toJSONString(), ContentType.APPLICATION_JSON);
-
+        NStringEntity entity = new NStringEntity(JacksonUtil.toJsonString(doc), ContentType.APPLICATION_JSON);
         try {
             client.performRequest("PUT", endpoint, Collections.emptyMap(), entity);
         } catch (IOException e) {
-            log.error(e.getMessage());
-            exit("elastic index doc fail!");
+            log.error("elastic index doc fail!");
+            throw new RuntimeException(e);
         }
     }
 
-    public void updateById(String index, String type, String id, JSONObject doc) {
+    public void updateById(String index, String type, String id, Map<String, Object> doc) {
 
         initClient();
         String endpoint = "/" + index + "/" + type + "/" + id + "/_update";
-
         doc.remove("_id");
-        JSONObject paraData = new JSONObject();
+        Map<String, Object> paraData = new HashMap<>();
         paraData.put("doc", doc);
-
-        NStringEntity entity = new NStringEntity(paraData.toJSONString(), ContentType.APPLICATION_JSON);
-
+        NStringEntity entity = new NStringEntity(JacksonUtil.toJsonString(paraData), ContentType.APPLICATION_JSON);
         try {
             client.performRequest("POST", endpoint, Collections.emptyMap(), entity);
         } catch (IOException e) {
-            log.error(e.getMessage());
-            exit("elastic update doc fail!");
+            log.error("elastic update doc fail!");
+            throw new RuntimeException(e);
         }
     }
 
-    public JSONObject findById(String index, String type, String id) {
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> findById(String index, String type, String id) {
 
         initClient();
-        JSONObject doc = null;
+        Map<String, Object> doc;
         String endpoint = "/" + index + "/" + type + "/" + id;
-
         try {
             Response response = client.performRequest("GET", endpoint);
             String str = EntityUtils.toString(response.getEntity(), "utf-8");
-            JSONObject rs = JSONObject.parseObject(str);
-            doc = rs.getJSONObject("_source");
-            doc.put("_id", rs.getString("_id"));
+            Map<String, Object> rs = JacksonUtil.parseObject(str, Map.class, String.class, Object.class);
+            doc = (Map<String, Object>) rs.get("_source");
+            doc.put("_id", rs.get("_id"));
         } catch (IOException e) {
-            log.error(e.getMessage());
-            exit("elastic index doc fail!");
+            log.error("elastic find doc fail!");
+            throw new RuntimeException(e);
         }
-
         return doc;
     }
 
-    public void insert(String index, String type, JSONObject doc) {
+    public void insert(String index, String type, Map<String, Object> doc) {
 
         initClient();
         String endpoint = "/" + index + "/" + type;
-
-        NStringEntity entity = new NStringEntity(doc.toJSONString(), ContentType.APPLICATION_JSON);
-
+        NStringEntity entity = new NStringEntity(JacksonUtil.toJsonString(doc), ContentType.APPLICATION_JSON);
         try {
             client.performRequest("POST", endpoint, Collections.emptyMap(), entity);
         } catch (IOException e) {
-            log.error(e.getMessage());
-            exit("elastic insert doc fail!");
+            log.error("elastic insert doc fail!");
+            throw new RuntimeException(e);
         }
     }
 
-    public void bulkInsert(String index, String type, Collection<JSONObject> ls) {
+    public void bulkInsert(String index, String type, Collection<Map<String, Object>> ls) {
 
         initClient();
-        if (ls.isEmpty()) {
-            return;
-        }
-        StringBuffer buffer = new StringBuffer();
-        ls.forEach(s -> {
-            long id = Snowflake.nextId();
-            buffer.append("{\"create\":{\"_index\":\""+ index +"\",\"_type\":\"" + type + "\",\"_id\":\""+ id + "\" } }\n");
-            buffer.append(s.toJSONString() + "\n");
-        });
+        if (!ls.isEmpty()) {
+            StringBuilder builder = new StringBuilder();
+            for (Map<String, Object> obj : ls) {
+                long id = Snowflake.nextId();
+                builder.append("{\"create\":{\"_index\":\"").append(index).append("\",\"_type\":\"").append(type).append("\",\"_id\":\"").append(id).append("\" } }\n");
+                builder.append(JacksonUtil.toJsonString(obj)).append("\n");
+            }
 
-        String endpoint = "/_bulk";
-
-        NStringEntity entity = new NStringEntity(buffer.toString(), ContentType.APPLICATION_JSON);
-
-        try {
-            client.performRequest("POST", endpoint, Collections.emptyMap(), entity);
-        } catch (IOException e) {
-            log.error(e.getMessage());
-            exit("elastic bulk create fail!");
+            String endpoint = "/_bulk";
+            NStringEntity entity = new NStringEntity(builder.toString(), ContentType.APPLICATION_JSON);
+            try {
+                client.performRequest("POST", endpoint, Collections.emptyMap(), entity);
+            } catch (IOException e) {
+                log.error("elastic bulk insert fail!");
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -373,32 +339,28 @@ public class EsRestUtil {
      * 根据id批量插入更新
      * @author xiezhenxiang 2019/9/9
      **/
-    public void bulkUpsertById(String index, String type, Collection<JSONObject> ls) {
+    public void bulkUpsertById(String index, String type, Collection<Map<String, Object>> ls) {
 
         initClient();
-        if (ls.isEmpty()) {
-            return;
-        }
-        StringBuffer buffer = new StringBuffer();
-        ls.forEach(s -> {
-
-            String id = s.getString("_id");
-            if (id != null) {
-                buffer.append("{\"index\":{\"_index\":\"" + index + "\",\"_type\":\"" + type + "\",\"_id\":\"" + id + "\"}}\n");
-                s.remove("_id");
-                buffer.append(s.toJSONString() + "\n");
+        if (!ls.isEmpty()) {
+            StringBuilder builder = new StringBuilder();
+            for (Map<String, Object> obj : ls) {
+                String id = obj.get("_id").toString();
+                if (id != null) {
+                    builder.append("{\"index\":{\"_index\":\"").append(index).append("\",\"_type\":\"").append(type).append("\",\"_id\":\"").append(id).append("\"}}\n");
+                    obj.remove("_id");
+                    builder.append(JacksonUtil.toJsonString(obj)).append("\n");
+                }
             }
-        });
 
-        String endpoint = "/_bulk";
-
-        NStringEntity entity = new NStringEntity(buffer.toString(), ContentType.APPLICATION_JSON);
-
-        try {
-            client.performRequest("POST", endpoint, Collections.emptyMap(), entity);
-        } catch (IOException e) {
-            log.error(e.getMessage());
-            exit("elastic bulk index fail!");
+            String endpoint = "/_bulk";
+            NStringEntity entity = new NStringEntity(builder.toString(), ContentType.APPLICATION_JSON);
+            try {
+                client.performRequest("POST", endpoint, Collections.emptyMap(), entity);
+            } catch (IOException e) {
+                log.error("elastic bulk index fail!");
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -412,55 +374,49 @@ public class EsRestUtil {
         if (ids.isEmpty()) {
             return;
         }
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder builder = new StringBuilder();
         ids.forEach(s -> {
-            buffer.append("{\"delete\":{\"_index\":\"").append(index).append("\",\"_type\":\"").append(type).append("\",\"_id\":\"").append(s).append("\"}}\n");
+            builder.append("{\"delete\":{\"_index\":\"").append(index).append("\",\"_type\":\"").append(type).append("\",\"_id\":\"").append(s).append("\"}}\n");
         });
 
         String endpoint = "/_bulk";
-
-        NStringEntity entity = new NStringEntity(buffer.toString(), ContentType.APPLICATION_JSON);
-
+        NStringEntity entity = new NStringEntity(builder.toString(), ContentType.APPLICATION_JSON);
         try {
             client.performRequest("POST", endpoint, Collections.emptyMap(), entity);
         } catch (IOException e) {
-            log.error(e.getMessage());
-            exit("elastic bulk delete fail!");
+            log.error("elastic bulk delete fail!");
+            throw new RuntimeException(e);
         }
     }
 
-    public void updateByQuery (String index, String type, String queryStr, JSONObject doc) {
+    public void updateByQuery (String index, String type, String queryStr, Map<String, Object> doc) {
 
-        if (doc.isEmpty()) {
-            return;
-        }
+        if (!doc.isEmpty()) {
+            initClient();
+            doc.remove("_id");
+            String endpoint = StringUtils.isBlank(type) ? "/" + index : "/" + index + "/" + type;
+            endpoint += "/_update_by_query?conflicts=proceed";
 
-        initClient();
-        doc.remove("_id");
-        String endpoint = StringUtils.isBlank(type) ? "/" + index : "/" + index + "/" + type;
-        endpoint += "/_update_by_query?conflicts=proceed";
+            Map<String, Object> paraData = new HashMap<>();
+            paraData.put("query", JacksonUtil.parseObject(queryStr, Map.class));
 
-        JSONObject paraData = new JSONObject();
-        paraData.put("query", JSONObject.parseObject(queryStr));
+            Map<String, Object> script = new HashMap<>();
+            script.put("lang", "painless");
+            script.put("params", doc);
+            StringBuilder source = new StringBuilder();
+            doc.keySet().forEach(s -> {
+                source.append("ctx._source.").append(s).append("=params.").append(s).append(";");
+            });
+            script.put("inline", source.toString());
+            paraData.put("script", script);
 
-        JSONObject script = new JSONObject();
-        script.put("lang", "painless");
-        script.put("params", doc);
-        StringBuffer source = new StringBuffer();
-        doc.keySet().forEach(s -> {
-            source.append("ctx._source."+ s +"=params."+ s +";");
-        });
-        script.put("inline", source.toString());
-
-        paraData.put("script", script);
-
-        NStringEntity entity = new NStringEntity(paraData.toJSONString(), ContentType.APPLICATION_JSON);
-
-        try {
-            client.performRequest("POST", endpoint, Collections.emptyMap(), entity);
-        } catch (IOException e) {
-            log.error(e.getMessage());
-            exit("elastic update_by_query fail!");
+            NStringEntity entity = new NStringEntity(JacksonUtil.toJsonString(paraData), ContentType.APPLICATION_JSON);
+            try {
+                client.performRequest("POST", endpoint, Collections.emptyMap(), entity);
+            } catch (IOException e) {
+                log.error("elastic update_by_query fail!");
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -468,86 +424,129 @@ public class EsRestUtil {
     /**
      * 深度检索，建议1w数据量以下使用
      */
-    public String findByQuery(String index, String type, Integer pageNo, Integer pageSize, String query, String sort) {
+    public List<Map<String, Object>> findByQuery(String index, String type, Integer pageNo, Integer pageSize, String query, String sort) {
 
         initClient();
         Objects.requireNonNull(pageNo, "pageNo is null!");
         Objects.requireNonNull(pageSize, "pageSize is null!");
 
-        String rs = null;
-        JSONObject paraData = new JSONObject();
+        Map<String, Object> paraData = new HashMap<>();
         paraData.put("from", (pageNo - 1) * pageSize);
         paraData.put("size", pageSize);
         if (StringUtils.isNotBlank(query)) {
-            paraData.put("query", JSONObject.parseObject(query));
+            paraData.put("query", JacksonUtil.parseObject(query, Map.class));
         }
         if (StringUtils.isNoneBlank(sort)) {
-            paraData.put("sort", JSONArray.parseObject(query));
+            paraData.put("sort", JacksonUtil.parseObject(sort, Map.class));
         }
 
         String endpoint = StringUtils.isNoneBlank(type) ? "/" + index + "/" + type : "/" + index;
         endpoint += "/_search";
-
+        List<Map<String, Object>> ls;
         try {
-            NStringEntity entity = new NStringEntity(paraData.toJSONString(), ContentType.APPLICATION_JSON);
+            NStringEntity entity = new NStringEntity(JacksonUtil.toJsonString(paraData), ContentType.APPLICATION_JSON);
             Response response = client.performRequest("POST", endpoint, Collections.emptyMap(), entity, consumerFactory);
-            rs = EntityUtils.toString(response.getEntity(), "utf-8");
-            rs = JSONPath.read(rs, "hits.hits").toString();
+            String rsp = EntityUtils.toString(response.getEntity(), "utf-8");
+            ls = dataInRsp(rsp);
         } catch (IOException e) {
-            log.error(e.getMessage());
-            exit("elastic search docs fail!");
+            log.error("elastic search docs fail!");
+            throw new RuntimeException(e);
         }
+        return ls;
+    }
 
-        return rs;
+    @SuppressWarnings("unchecked")
+    private List<Map<String, Object>> dataInRsp(String rsp) {
+
+        List<Map<String, Object>> ls = new ArrayList<>();
+        Map rMap = JacksonUtil.parseObject(rsp, Map.class);
+        List<Map> hits = (List<Map>) ((Map) rMap.get("hits")).get("hits");
+        for (Map hit : hits) {
+            Map<String, Object> m = (Map<String, Object>) hit.get("_source");
+            m.put("_id", hit.get("_id"));
+            ls.add(m);
+        }
+        return ls;
     }
 
     /**
      * 游标检索全量数据,配合循环使用，第一次传scrollId为null,第二次传返回的scrollId,直到数据读完位置（rs[1].length <= 2）
      */
-    public String[] findByScroll(String index, String type, String query, String sort, Integer size, String scrollId) {
+    @SuppressWarnings("unchecked")
+    public ScrollRsp findByScroll(String index, String type, String query, String sort, Integer size, String scrollId) {
 
         initClient();
         Objects.requireNonNull(size, "size is null");
 
-        String rs = "";
-        JSONObject paraData = new JSONObject();
+        Map<String, Object> paraData = new HashMap<>();
         String endpoint;
         if (scrollId == null) {
-
             if (StringUtils.isNotBlank(query)) {
-                paraData.put("query", JSONObject.parseObject(query));
+                paraData.put("query", JacksonUtil.parseObject(query, Map.class));
             }
             if (StringUtils.isNoneBlank(sort)) {
-                paraData.put("sort", JSONArray.parseObject(query));
+                paraData.put("sort", JacksonUtil.parseObject(sort, Map.class));
             }
             paraData.put("size", size);
-
             endpoint = StringUtils.isNoneBlank(type) ? "/" + index + "/" + type : "/" + index;
             endpoint += "/_search?scroll=5m";
         } else {
-
             endpoint = "/_search/scroll";
             paraData.put("scroll", "5m");
             paraData.put("scroll_id", scrollId);
         }
 
+        ScrollRsp scrollRsp = new ScrollRsp();
         try {
-            NStringEntity entity = new NStringEntity(paraData.toJSONString(), ContentType.APPLICATION_JSON);
+            NStringEntity entity = new NStringEntity(JacksonUtil.toJsonString(paraData), ContentType.APPLICATION_JSON);
             Response response = client.performRequest("POST", endpoint, Collections.emptyMap(), entity, consumerFactory);
-            rs = EntityUtils.toString(response.getEntity(), "utf-8");
-            scrollId = JSONPath.read(rs, "_scroll_id").toString();
-            rs = JSONPath.read(rs, "hits.hits").toString();
-
-            if (rs.length() <= 2) {
+            String rsp = EntityUtils.toString(response.getEntity(), "utf-8");
+            Map<String, Object> m = JacksonUtil.parseObject(rsp, Map.class);
+            scrollId = m.get("_scroll_id").toString();
+            List<Map<String, Object>> ls = dataInRsp(rsp);
+            scrollRsp.setData(ls);
+            scrollRsp.setScrollId(scrollId);
+            scrollRsp.setHasNext(!ls.isEmpty());
+            if (!scrollRsp.hasNext) {
                 endpoint = "/_search/scroll/" + scrollId;
                 client.performRequest("DELETE", endpoint);
             }
         } catch (IOException e) {
-            log.error(e.getMessage());
-            exit("elastic search by scroll fail!");
+            log.error("elastic search by scroll fail!");
+            throw new RuntimeException(e);
+        }
+        return scrollRsp;
+    }
+
+    public static class ScrollRsp {
+
+        private String scrollId;
+        private List<Map<String, Object>> data;
+        private boolean hasNext;
+
+        public String getScrollId() {
+            return scrollId;
         }
 
-        return new String[] {scrollId, rs};
+        public void setScrollId(String scrollId) {
+            this.scrollId = scrollId;
+        }
+
+        public List<Map<String, Object>> getData() {
+            return data;
+        }
+
+        public void setData(List<Map<String, Object>> data) {
+            this.data = data;
+        }
+
+        public boolean hasNext() {
+            return hasNext;
+        }
+
+        public void setHasNext(boolean hasNext) {
+            this.hasNext = hasNext;
+        }
     }
 
 
@@ -556,15 +555,13 @@ public class EsRestUtil {
 
         EsRestUtil restClient = getInstance(new HttpHost("192.168.4.11", 9200));
 
-        String[] rs = restClient.findByScroll("kg_gw_help_test22", "data", null, null, 10000, null);
-
-        int i = 1;
-        while (rs[1].length() > 2) {
-
-            String str = rs[1];
-            String scrollId = rs[0];
-            System.out.println(i ++);
-            rs = restClient.findByScroll("kg_gw_help_test22", "data", null, null, 5000, rs[0]);
+        ScrollRsp rs = restClient.findByScroll("kg_gw_help_test22", "data", null, null, 10, null);
+        int page = 1;
+        while (rs.hasNext()) {
+            List<Map<String, Object>> data = rs.getData();
+            System.out.println(JacksonUtil.toJsonString(data));
+            rs = restClient.findByScroll("kg_gw_help_test22", "data", null, null, 5000, rs.getScrollId());
+            System.out.println("page: " + page++);
         }
 
     }
@@ -580,11 +577,8 @@ public class EsRestUtil {
         if (client == null) {
             synchronized (EsRestUtil.class){
                 if (client == null) {
-
                     String key = hostStr();
-
                     if (pool.containsKey(key)) {
-
                         client = pool.get(key);
                         if (client == null) {
                             pool.remove(key);
@@ -614,23 +608,16 @@ public class EsRestUtil {
         }
     }
 
-    private void exit(String msg) {
-
-        throw ServiceException.newInstance(60000, msg);
-    }
-
     private String hostStr() {
 
-        String str = "";
-
+        StringBuilder builder = new StringBuilder();
         for (int i = 0; i < hosts.length; i ++) {
-            str += hosts[i].toHostString() + "_";
+            builder.append(hosts[i].toHostString()).append("_");
         }
-        return str.substring(0, str.length() - 1);
+        return builder.substring(0, builder.length() - 1);
     }
 
     public RestClient getClient() {
-
         initClient();
         return client;
     }

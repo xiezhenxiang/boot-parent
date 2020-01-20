@@ -6,8 +6,8 @@
 
     <groupId>indi.shine.boot</groupId>
     <artifactId>boot-parent</artifactId>
+    <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <version>5.5</version>
     <modules>
         <module>boot-autoconfigure</module>
     </modules>
@@ -28,13 +28,12 @@
         <mybatis-spring-boot.version>1.3.2</mybatis-spring-boot.version>
         <jwt.version>3.1.0</jwt.version>
         <poi.version>3.9</poi.version>
-        <fastjson.version>1.2.53</fastjson.version>
         <commons-lang.version>3.7</commons-lang.version>
         <commons-io.version>2.6</commons-io.version>
         <guava.version>23.0</guava.version>
         <es.version>5.5.3</es.version>
         <java.version>1.8</java.version>
-        <shine.version>5.5</shine.version>
+        <shine.version>1.0-SNAPSHOT</shine.version>
         <lombok.version>1.18.2</lombok.version>
         <mongodb.version>3.4.1</mongodb.version>
     </properties>
@@ -67,11 +66,6 @@
                     <groupId>org.apache.commons</groupId>
                 </exclusion>
             </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>fastjson</artifactId>
-            <version>${fastjson.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -158,16 +152,15 @@
 
     </dependencyManagement>
 
-
     <distributionManagement>
         <repository>
-            <id>public</id>
-            <name>maven-releases</name>
+            <id>user-release</id>
+            <name>User Project Release</name>
             <url>http://192.168.4.2:8081/repository/maven-releases/</url>
         </repository>
         <snapshotRepository>
-            <id>public</id>
-            <name>maven-snapshots</name>
+            <id>user-release</id>
+            <name>User Project SNAPSHOTS</name>
             <url>http://192.168.4.2:8081/repository/maven-snapshots/</url>
         </snapshotRepository>
     </distributionManagement>

@@ -1,7 +1,7 @@
 package indi.shine.boot.base.exception.handler;
 
 import indi.shine.boot.base.model.api.resp.ReturnT;
-import indi.shine.boot.base.util.CodeMsgUtil;
+import indi.shine.boot.base.model.constant.ErrorCodeMsg;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import javax.ws.rs.*;
@@ -19,7 +19,7 @@ public final class WebApplicationExceptionHandler implements ExceptionMapper<Web
     @Override
     public Response toResponse(WebApplicationException exception) {
         int code = 80004;
-        String errMsg = CodeMsgUtil.getMsg(code);
+        String errMsg = ErrorCodeMsg.of(code);
         Status statusCode = Status.OK;
         if (exception instanceof NotFoundException) {
             statusCode = Status.NOT_FOUND;

@@ -3,7 +3,6 @@ package indi.shine.boot.base.model.constant;
 import indi.shine.boot.base.util.ClassUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.core.io.support.ResourcePropertySource;
 
 import java.io.FileInputStream;
 import java.io.IOException;

@@ -14,27 +14,27 @@ import java.util.Collection;
 @Data
 @ApiModel
 @JsonInclude(Include.NON_NULL)
-public class ReturnPage<T> {
+public class PageInfo<T> {
 
     protected Collection<T> content;
     protected Long total;
     protected Boolean hasNext;
 
-    private ReturnPage(Collection<T> content, long total) {
+    private PageInfo(Collection<T> content, long total) {
         this.content = content;
         this.total = total;
     }
 
-    private ReturnPage(Collection<T> content, boolean hasNext) {
+    private PageInfo(Collection<T> content, boolean hasNext) {
         this.content = content;
         this.hasNext = hasNext;
     }
 
-    public static <T>ReturnPage<T> of(Collection<T> content, long total) {
-        return new ReturnPage<>(content, total);
+    public static <T> PageInfo<T> of(Collection<T> content, long total) {
+        return new PageInfo<>(content, total);
     }
 
-    public static <T>ReturnPage<T> of(Collection<T> content, boolean hasNext) {
-        return new ReturnPage<>(content, hasNext);
+    public static <T> PageInfo<T> of(Collection<T> content, boolean hasNext) {
+        return new PageInfo<>(content, hasNext);
     }
 }

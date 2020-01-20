@@ -1,6 +1,5 @@
 package indi.shine.boot.base.util.database;
 
-import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -80,10 +79,10 @@ public class DriverUtil {
      * @param sql sql语句
      * @param params 参数
      **/
-    public List<JSONObject> find(String sql, Object... params){
+    public List<Map<String, Object>> find(String sql, Object... params){
 
         Connection con = getConnection();
-        List<JSONObject> ls = new ArrayList<>();
+        List<Map<String, Object>> ls = new ArrayList<>();
         PreparedStatement statement;
         try {
             int index = 1;
@@ -97,7 +96,7 @@ public class DriverUtil {
             ResultSetMetaData metaData = resultSet.getMetaData();
             int colsLen = metaData.getColumnCount();
             while (resultSet.next()) {
-                JSONObject obj = new JSONObject();
+                Map<String, Object> obj = new HashMap<>();
                 for (int i = 0; i < colsLen; i++) {
                     String colsName = metaData.getColumnName(i + 1);
                     Object colsValue = resultSet.getObject(colsName);
@@ -113,29 +112,29 @@ public class DriverUtil {
         return ls;
     }
 
-    public JSONObject findOne(String sql, Object... params){
+    public Map<String, Object> findOne(String sql, Object... params){
 
-        List<JSONObject> ls = find(sql, params);
-        return ls.isEmpty() ? new JSONObject() : ls.get(0);
+        List<Map<String, Object>> ls = find(sql, params);
+        return ls.isEmpty() ? new HashMap<>() : ls.get(0);
     }
 
     public List<String> getTables() {
 
         List<String> ls;
         if (url.contains("jdbc:hive2")) {
-            ls = find("show tables").stream().map(s -> s.getString("tab_name")).collect(Collectors.toList());
+            ls = find("show tables").stream().map(s -> s.get("tab_name").toString()).collect(Collectors.toList());
         } else {
 
             String dbName =url.substring(url.lastIndexOf("/") + 1, url.lastIndexOf("?"));
             String infoMysqlUrl = url.replaceAll("/" + dbName, "/information_schema");
             DriverUtil infoMysqlUtil = getInstance(infoMysqlUrl, userName, pwd);
             String sql = "select TABLE_NAME, TABLE_COMMENT from TABLES where TABLE_SCHEMA = ?";
-            ls = infoMysqlUtil.find(sql, dbName).stream().map(s -> s.getString("TABLE_NAME")).collect(Collectors.toList());
+            ls = infoMysqlUtil.find(sql, dbName).stream().map(s -> s.get("TABLE_NAME").toString()).collect(Collectors.toList());
         }
         return ls;
     }
 
-    public boolean insertSelective(String tbName, JSONObject bean) {
+    public boolean insertSelective(String tbName, Map<String, Object> bean) {
 
         String sql = "insert into " + tbName + " (";
         List<Object> values = new ArrayList<>();
@@ -156,7 +155,7 @@ public class DriverUtil {
         return true;
     }
 
-    public boolean updateSelective(String tbName, JSONObject bean, String... queryField) {
+    public boolean updateSelective(String tbName, Map<String, Object> bean, String... queryField) {
 
         List<String> queryFieldLs = Lists.newArrayList(queryField);
 
@@ -257,7 +256,7 @@ public class DriverUtil {
 
         DriverUtil driverUtil = DriverUtil.getMysqlInstance("192.168.4.11", 3306, "plantdata_manage", "root", "root@hiekn");
 
-        JSONObject obj = new JSONObject();
+        Map<String, Object> obj = new HashMap<>();
         obj.put("name", "name");
         obj.put("phone", "123");
         obj.put("age", 18);

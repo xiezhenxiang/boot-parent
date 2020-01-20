@@ -1,6 +1,6 @@
 package indi.shine.boot.base.model;
 
-import indi.shine.boot.base.model.api.resp.ReturnPage;
+import indi.shine.boot.base.model.api.resp.PageInfo;
 import indi.shine.boot.base.model.search.QueryCondition;
 import javax.annotation.Resource;
 import java.util.List;
@@ -11,10 +11,10 @@ public class BaseServiceImpl<T, PK> implements BaseService<T, PK> {
     private BaseMapper<T, PK> baseMapper;
 
     @Override
-    public ReturnPage<T> list(List<QueryCondition> qcList, List<QueryCondition> qoList, PageModel page) {
+    public PageInfo<T> list(List<QueryCondition> qcList, List<QueryCondition> qoList, PageModel page) {
         List<T> ls = baseMapper.list(qcList, qoList, page.getPageNo(), page.getPageSize());
         Integer count = baseMapper.countList(qcList);
-        return ReturnPage.of(ls, count);
+        return PageInfo.of(ls, count);
     }
 
     @Override

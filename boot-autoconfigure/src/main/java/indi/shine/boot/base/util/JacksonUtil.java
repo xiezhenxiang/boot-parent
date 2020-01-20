@@ -36,7 +36,7 @@ public class JacksonUtil {
 	/**
 	 * bean、array、List、Map --> json
 	 */
-	public static String writeValueAsString(Object obj) {
+	public static String toJsonString(Object obj) {
 		try {
 			return getInstance().writeValueAsString(obj);
 		} catch (Exception e) {
@@ -47,7 +47,7 @@ public class JacksonUtil {
 	/**
 	 * string --> bean、Map、List(array)
 	 */
-	public static <T> T readValue(String jsonStr, Class<T> clazz) {
+	public static <T> T parseObject(String jsonStr, Class<T> clazz) {
 		try {
 			return getInstance().readValue(jsonStr, clazz);
 		} catch (Exception e) {
@@ -58,7 +58,7 @@ public class JacksonUtil {
 	/**
 	 * string --> List<Bean>...
 	 */
-	public static <T> T readValue(String jsonStr, Class<?> parametrized, Class<?>... parameterClasses) {
+	public static <T> T parseObject(String jsonStr, Class<?> parametrized, Class<?>... parameterClasses) {
 		try {
 			JavaType javaType = getInstance().getTypeFactory().constructParametricType(parametrized, parameterClasses);
 			return getInstance().readValue(jsonStr, javaType);
@@ -67,7 +67,7 @@ public class JacksonUtil {
 		}
 	}
 
-	public static <T> T readValueRefer(String jsonStr, TypeReference type) {
+	public static <T> T parseObject(String jsonStr, TypeReference type) {
 		try {
 			return getInstance().readValue(jsonStr, new TypeReference<T>() { });
 		} catch (Exception e) {
@@ -79,8 +79,8 @@ public class JacksonUtil {
 	 * obj --> bean、Map、List(array)
 	 * @return obj
 	 */
-	public static <T> T convertValue(Object obj, Class<T> clazz) {
-		return readValue(writeValueAsString(obj), clazz);
+	public static <T> T convertObject(Object obj, Class<T> clazz) {
+		return parseObject(toJsonString(obj), clazz);
 	}
 
 	public static void main(String[] args) {
@@ -88,11 +88,11 @@ public class JacksonUtil {
 		Map<String, Object> map = new HashMap<>();
 		map.put("aaa", "111");
 		map.put("bbb", 222);
-		String json = writeValueAsString(map);
+		String json = toJsonString(map);
 		System.out.println(json);
-		System.out.println(readValue(json, Map.class));
-		json = writeValueAsString(Lists.newArrayList(map));
-		List<Map<String, Object>> ls = readValue(json, List.class, Map.class);
-		System.out.println(writeValueAsString(ls));
+		System.out.println(parseObject(json, Map.class));
+		json = toJsonString(Lists.newArrayList(map));
+		List<Map<String, Object>> ls = parseObject(json, List.class, Map.class);
+		System.out.println(toJsonString(ls));
 	}
 }
