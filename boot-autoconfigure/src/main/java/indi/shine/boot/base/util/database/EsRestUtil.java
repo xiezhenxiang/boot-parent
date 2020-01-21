@@ -3,6 +3,7 @@ package indi.shine.boot.base.util.database;
 import indi.shine.boot.base.exception.ServiceException;
 import indi.shine.boot.base.util.JacksonUtil;
 import indi.shine.boot.base.util.Snowflake;
+import indi.shine.boot.base.util.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHost;
@@ -424,7 +425,7 @@ public class EsRestUtil {
     /**
      * 深度检索，建议1w数据量以下使用
      */
-    public List<Map<String, Object>> findByQuery(String index, String type, Integer pageNo, Integer pageSize, String query, String sort) {
+    public List<Map<String, Object>> findByQuery(String index, String type,  String query, String sort, Integer pageNo, Integer pageSize) {
 
         initClient();
         Objects.requireNonNull(pageNo, "pageNo is null!");
@@ -467,6 +468,25 @@ public class EsRestUtil {
             ls.add(m);
         }
         return ls;
+    }
+
+    public long count(String index, String type, String query) {
+
+        String entityStr = StringUtils.isBlank(query) ? "{}" : "{\"query\":"+ query +"}";
+        String endpoint = StringUtils.isNoneBlank(type) ? "/" + index + "/" + type : "/" + index;
+        endpoint += "/_count";
+        NStringEntity entity = new NStringEntity(entityStr, ContentType.APPLICATION_JSON);
+        Response response = null;
+        long count;
+        try {
+            response = client.performRequest("GET", endpoint, Collections.emptyMap(), entity, consumerFactory);
+            String rsp = EntityUtils.toString(response.getEntity(), "utf-8");
+            count = Long.parseLong(JacksonUtil.parseObject(rsp, Map.class).get("count").toString());
+        } catch (IOException e) {
+            log.error("elastic count docs fail!");
+            throw new RuntimeException(e);
+        }
+        return count;
     }
 
     /**
@@ -549,13 +569,11 @@ public class EsRestUtil {
         }
     }
 
-
-
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
 
         EsRestUtil restClient = getInstance(new HttpHost("192.168.4.11", 9200));
 
-        ScrollRsp rs = restClient.findByScroll("kg_gw_help_test22", "data", null, null, 10, null);
+        ScrollRsp rs = restClient.findByScroll("kg_gw_help_test22", "data", null, null, 5000, null);
         int page = 1;
         while (rs.hasNext()) {
             List<Map<String, Object>> data = rs.getData();
@@ -564,6 +582,9 @@ public class EsRestUtil {
             System.out.println("page: " + page++);
         }
 
+        List<Map<String, Object>> byQuery = restClient.findByQuery("kg_gw_help_test22", "data", null, null, 1, 10);
+        System.out.println(JacksonUtil.toJsonString(byQuery));
+        System.out.println(restClient.count("kg_gw_help_test22", "data", null));
     }
 
     private EsRestUtil(HttpHost... hosts) {
@@ -611,8 +632,8 @@ public class EsRestUtil {
     private String hostStr() {
 
         StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < hosts.length; i ++) {
-            builder.append(hosts[i].toHostString()).append("_");
+        for (HttpHost host : hosts) {
+            builder.append(host.toHostString()).append("_");
         }
         return builder.substring(0, builder.length() - 1);
     }
@@ -623,7 +644,6 @@ public class EsRestUtil {
     }
 
     public void close () {
-
         if (client != null) {
             try {
                 client.close();
