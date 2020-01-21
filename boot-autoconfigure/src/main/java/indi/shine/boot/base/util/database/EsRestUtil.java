@@ -3,7 +3,6 @@ package indi.shine.boot.base.util.database;
 import indi.shine.boot.base.exception.ServiceException;
 import indi.shine.boot.base.util.JacksonUtil;
 import indi.shine.boot.base.util.Snowflake;
-import indi.shine.boot.base.util.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHost;

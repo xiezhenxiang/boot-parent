@@ -79,7 +79,7 @@ public class DriverUtil {
      * @param sql sql语句
      * @param params 参数
      **/
-    public List<Map<String, Object>> find(String sql, Object... params){
+    public List<Map<String, Object>> findMany(String sql, Object... params){
 
         Connection con = getConnection();
         List<Map<String, Object>> ls = new ArrayList<>();
@@ -113,44 +113,43 @@ public class DriverUtil {
     }
 
     public Map<String, Object> findOne(String sql, Object... params){
-
-        List<Map<String, Object>> ls = find(sql, params);
-        return ls.isEmpty() ? new HashMap<>() : ls.get(0);
+        List<Map<String, Object>> ls = findMany(sql, params);
+        return ls.isEmpty() ? null : ls.get(0);
     }
 
     public List<String> getTables() {
 
         List<String> ls;
         if (url.contains("jdbc:hive2")) {
-            ls = find("show tables").stream().map(s -> s.get("tab_name").toString()).collect(Collectors.toList());
+            ls = findMany("show tables").stream().map(s -> s.get("tab_name").toString()).collect(Collectors.toList());
         } else {
 
             String dbName =url.substring(url.lastIndexOf("/") + 1, url.lastIndexOf("?"));
             String infoMysqlUrl = url.replaceAll("/" + dbName, "/information_schema");
             DriverUtil infoMysqlUtil = getInstance(infoMysqlUrl, userName, pwd);
             String sql = "select TABLE_NAME, TABLE_COMMENT from TABLES where TABLE_SCHEMA = ?";
-            ls = infoMysqlUtil.find(sql, dbName).stream().map(s -> s.get("TABLE_NAME").toString()).collect(Collectors.toList());
+            ls = infoMysqlUtil.findMany(sql, dbName).stream().map(s -> s.get("TABLE_NAME").toString()).collect(Collectors.toList());
         }
         return ls;
     }
 
     public boolean insertSelective(String tbName, Map<String, Object> bean) {
 
-        String sql = "insert into " + tbName + " (";
+        StringBuilder sql = new StringBuilder("insert into `" + tbName + "` (");
         List<Object> values = new ArrayList<>();
         for (Map.Entry<String, Object> entry : bean.entrySet()) {
             if (entry.getValue() != null) {
-                sql += entry.getKey() + ", ";
+                sql.append(entry.getKey()).append(", ");
                 values.add(entry.getValue());
             }
         }
         if (!values.isEmpty()) {
-            sql = sql.substring(0, sql.length() - 2) + ") values (";
+            sql = new StringBuilder(sql.substring(0, sql.length() - 2) + ") values (");
             for (int i = 0; i < values.size(); i ++) {
-                sql += "?, ";
+                sql.append("?, ");
             }
-            sql = sql.substring(0, sql.length() - 2) + ")";
-            update(sql, values.toArray());
+            sql = new StringBuilder(sql.substring(0, sql.length() - 2) + ")");
+            update(sql.toString(), values.toArray());
         }
         return true;
     }
@@ -159,31 +158,27 @@ public class DriverUtil {
 
         List<String> queryFieldLs = Lists.newArrayList(queryField);
 
-        String sql = "update " + tbName + " set ";
+        StringBuilder sql = new StringBuilder("update `" + tbName + "` set ");
         List<Object> values = new ArrayList<>();
-
         for (Map.Entry<String, Object> entry : bean.entrySet()) {
             if (!queryFieldLs.contains(entry.getKey()) && entry.getValue() != null) {
-                sql += entry.getKey() + " = ? , ";
+                sql.append(entry.getKey()).append(" = ? , ");
                 values.add(entry.getValue());
             }
         }
-
         if (!values.isEmpty()) {
-
-            sql = sql.substring(0, sql.length() - 2);
+            sql = new StringBuilder(sql.substring(0, sql.length() - 2));
             if (!queryFieldLs.isEmpty()) {
-                sql += " where ";
+                sql.append(" where ");
                 for (String field : queryFieldLs) {
-                    sql += field + " = ? and ";
+                    sql.append(field).append( " = ? and ");
                     values.add(bean.get(field));
                 }
 
-                sql = sql.substring(0, sql.length() - 5);
+                sql = new StringBuilder(sql.substring(0, sql.length() - 5));
             }
-            return update(sql, values.toArray());
+            return update(sql.toString(), values.toArray());
         }
-
         return true;
     }
 
@@ -255,13 +250,11 @@ public class DriverUtil {
     public static void main(String[] args) {
 
         DriverUtil driverUtil = DriverUtil.getMysqlInstance("192.168.4.11", 3306, "plantdata_manage", "root", "root@hiekn");
-
         Map<String, Object> obj = new HashMap<>();
         obj.put("name", "name");
         obj.put("phone", "123");
         obj.put("age", 18);
         obj.put("date", new Date());
         driverUtil.updateSelective("t_snapshot", obj, "name", "phone");
-
     }
 }
