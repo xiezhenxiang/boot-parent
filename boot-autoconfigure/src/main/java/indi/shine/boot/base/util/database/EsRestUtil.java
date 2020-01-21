@@ -13,13 +13,13 @@ import org.apache.http.util.EntityUtils;
 import org.elasticsearch.client.HttpAsyncResponseConsumerFactory;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
-
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Low Level RestClient support es 5.x
+ * Low Level RestClient
+ * support es 5.x and 6.x
  * @author xiezhenxiang 2019/9/7
  **/
 @Slf4j
@@ -587,7 +587,6 @@ public class EsRestUtil {
     }
 
     private EsRestUtil(HttpHost... hosts) {
-
         this.hosts = hosts;
         initClient();
     }

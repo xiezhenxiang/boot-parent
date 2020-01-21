@@ -10,7 +10,6 @@ import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 import com.mongodb.client.model.UpdateManyModel;
 import com.mongodb.client.model.UpdateOptions;
-import indi.shine.boot.base.exception.ServiceException;
 import org.bson.BsonDocument;
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -19,9 +18,7 @@ import org.bson.types.ObjectId;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -31,54 +28,35 @@ import java.util.stream.Collectors;
  */
 public class MongoUtil {
 
-    private String ip;
-    private List<ServerAddress> urlList;
+    private String ipPorts;
     private volatile MongoClient client;
-    private static volatile ConcurrentHashMap<String, MongoClient> pool = new ConcurrentHashMap<>(10);
+    private List<ServerAddress> urlList = new ArrayList<>();
     private Integer batchSize = 3000;
+    private static volatile ConcurrentHashMap<String, MongoClient> pool = new ConcurrentHashMap<>(20);
 
-    public MongoUtil(String ip, Integer port) {
-
-        this.ip = ip;
-        String[] ips = ip.split(",");
-        urlList = new ArrayList<>();
-        for (String one : ips) {
-            urlList.add(new ServerAddress(one, port));
-        }
-        initClient();
-    }
-
-    public MongoUtil(String hosts) {
-
-        StringBuilder ipStr = new StringBuilder();
-        urlList = new ArrayList<>();
-        String[] hostArr = hosts.split(",");
+    public MongoUtil(String ipPorts) {
+        String[] hostArr = ipPorts.split(",");
         for (String one : hostArr) {
             String[] ipPort = one.split(":");
-            ipStr.append(ipPort[0]).append(",");
             urlList.add(new ServerAddress(ipPort[0], Integer.parseInt(ipPort[1])));
         }
-        this.ip = ipStr.substring(0, ipStr.length() - 1);
+        this.ipPorts = ipPorts;
         initClient();
     }
 
     public MongoUtil(MongoClient mongoClient) {
-
         this.client = mongoClient;
     }
 
     public MongoCursor<Document> find(String db, String col, Bson query, Bson sort) {
-
         return find(db, col, query, sort, null, null);
     }
 
     public MongoCursor<Document> find(String db, String col, Bson query) {
-
         return find(db, col, query, null, null, null);
     }
 
     public MongoCursor<Document> find(String db, String col, Bson query, Bson sort, Integer pageNo, Integer pageSize) {
-
         initClient();
         query = query == null ? new Document() : query;
         sort = sort == null ? new Document() : sort;
@@ -95,60 +73,52 @@ public class MongoUtil {
     }
 
     public MongoCursor<Document> aggregate(String db, String col, List<Bson> aggLs) {
-
         initClient();
-        return client.getDatabase(db).getCollection(col).aggregate(aggLs).useCursor(true).batchSize(batchSize).useCursor(true)
+        return client.getDatabase(db).getCollection(col).aggregate(aggLs).useCursor(true).batchSize(batchSize)
                 .maxTime(10L, TimeUnit.MINUTES).iterator();
     }
 
     public void insertMany(String database, String collection, List<Document> documentList) {
-
         initClient();
         if (documentList == null || documentList.isEmpty()) {
             return;
         }
-
         client.getDatabase(database).getCollection(collection).insertMany(documentList);
     }
 
     public void insertOne(String database, String collection, Document doc) {
-
         initClient();
         client.getDatabase(database).getCollection(collection).insertOne(doc);
     }
 
     public void updateOne(String database, String collection, Bson query, Document doc) {
-
         initClient();
         client.getDatabase(database).getCollection(collection).replaceOne(query, new Document("$set", doc));
     }
 
     public void upsertOne(String database, String collection, Bson query, Document doc) {
-
         initClient();
         client.getDatabase(database).getCollection(collection).replaceOne(query, doc, new UpdateOptions().upsert(true));
     }
 
-    public void upsertMany(String database, String collection, List<Document> ls, boolean upsert, String... fieldArr) {
-
+    public void upsertMany(String database, String collection, List<Document> ls, String... fieldArr) {
         initClient();
         if (ls == null || ls.isEmpty()) {
             return;
         }
-
         List<UpdateManyModel<Document>> requests = ls.stream().map(s -> new UpdateManyModel<Document>(
-                new Bson() {
-                    @Override
-                    public <TDocument> BsonDocument toBsonDocument(Class<TDocument> aClass, CodecRegistry codecRegistry) {
-                        Document doc = new Document();
-                        for (String field : fieldArr) {
-                            doc.append(field, s.get(field));
-                        }
-                        return doc.toBsonDocument(aClass, codecRegistry);
+            new Bson() {
+                @Override
+                public <TDocument> BsonDocument toBsonDocument(Class<TDocument> aClass, CodecRegistry codecRegistry) {
+                    Document doc = new Document();
+                    for (String field : fieldArr) {
+                        doc.append(field, s.get(field));
                     }
-                },
-                new Document("$set",s),
-                new UpdateOptions().upsert(upsert)
+                    return doc.toBsonDocument(aClass, codecRegistry);
+                }
+            },
+            new Document("$set", s),
+            new UpdateOptions().upsert(true)
         )).collect(Collectors.toList());
 
         client.getDatabase(database).getCollection(collection).bulkWrite(requests);
@@ -314,32 +284,27 @@ public class MongoUtil {
     private void initClient() {
 
         if (client == null) {
-
             synchronized (MongoUtil.class){
-
                 if (client == null) {
-
-                    if (pool.containsKey(ip)) {
-                        client = pool.get(ip);
+                    if (pool.containsKey(ipPorts)) {
+                        client = pool.get(ipPorts);
                         if (client == null) {
-                            pool.remove(ip);
+                            pool.remove(ipPorts);
                         } else {
                             return;
                         }
                     }
                     try {
                         MongoClientOptions options = MongoClientOptions.builder()
-                                .connectionsPerHost(20)
-                                .minConnectionsPerHost(1)
-                                .maxConnectionIdleTime(0)
-                                .maxConnectionLifeTime(0)
-                                .connectTimeout(30000)
-                                .socketTimeout(120000)
-                                .build();
-
+                            .connectionsPerHost(20)
+                            .minConnectionsPerHost(1)
+                            .maxConnectionIdleTime(0)
+                            .maxConnectionLifeTime(0)
+                            .connectTimeout(30000)
+                            .socketTimeout(120000)
+                            .build();
                         client = new MongoClient(urlList, options);
-                        pool.put(ip, client);
-
+                        pool.put(ipPorts, client);
                     } catch (Exception e) {
                         e.printStackTrace();
                         throw new RuntimeException("mongodb connect error!");
