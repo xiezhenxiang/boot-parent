@@ -17,7 +17,7 @@ public class TimeUtil {
     }
 
     /** 获取当前时间 */
-    public static Date now() {
+    public static Date nowDate() {
         ZonedDateTime zdt = LocalDateTime.now().atZone(ZoneId.systemDefault());
         return Date.from(zdt.toInstant());
     }
@@ -34,8 +34,11 @@ public class TimeUtil {
     }
 
     /** 字符串转LocalDateTime */
-    public static LocalDateTime parse(String dateStr, String pattern) {
+    public static LocalDateTime parseDateTime(String dateStr, String pattern) {
         DateTimeFormatter format = DateTimeFormatter.ofPattern(pattern);
+        if (pattern.length() <= 10) {
+            return LocalDate.parse(dateStr, format).atStartOfDay();
+        }
         return LocalDateTime.parse(dateStr, format);
     }
 

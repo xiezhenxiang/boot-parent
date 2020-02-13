@@ -16,6 +16,7 @@ import javax.ws.rs.ext.ExceptionMapper;
  * @author xiezhenxiang 2019/6/13
  **/
 public final class BaseExceptionHandler implements ExceptionMapper<BaseException> {
+
     private static final Log logger = LogFactory.getLog(BaseExceptionHandler.class);
     private String basePackage =  BeanUtil.getBean(JerseySwaggerProperties.class).getBasePackage();
 
