@@ -67,7 +67,7 @@ public class DriverUtil {
             // update lines num
             result = statement.executeUpdate();
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         } finally {
             close(con);
         }
@@ -105,7 +105,7 @@ public class DriverUtil {
                 ls.add(obj);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         } finally {
             close(con);
         }
@@ -233,8 +233,7 @@ public class DriverUtil {
         try {
             return dataSource.getConnection();
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("get connection error");
+            throw new RuntimeException(e);
         }
     }
 
@@ -242,8 +241,7 @@ public class DriverUtil {
         try {
             con.close();
         } catch (SQLException e) {
-            e.printStackTrace();
-            throw new RuntimeException("driver connection close error");
+            throw new RuntimeException(e);
         }
     }
 
