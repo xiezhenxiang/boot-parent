@@ -13,7 +13,10 @@ public class TimeUtil {
 
     /** 获取字符串日期 */
     public static String nowStr() {
-        return LocalDate.now() + " " + LocalTime.now().withNano(0);
+        String date = LocalDate.now().toString();
+        String time = LocalTime.now().withNano(0).toString();
+        time = time.length() == 5 ? time + ":00" : time;
+        return date + " " + time;
     }
 
     /** 获取当前时间 */
