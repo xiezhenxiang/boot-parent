@@ -1,6 +1,7 @@
 package indi.shine.boot.base.util;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,8 +28,7 @@ public final class HttpUtil {
     private final static String BOUNDARY_PREFIX = "--";
     private static final String FILE_CONTENT_TYPE = "multipart/form-data; boundary=" + BOUNDARY;
     private static final String JSON_CONTENT_TYPE = "application/json;charset=utf-8";
-    public HttpUtil() {
-    }
+    private static int readTimeout = 30 * 1000;
 
     private static HttpURLConnection openConnection(String url, Map<String, String> head, String proxyHost) throws IOException {
 
@@ -47,8 +47,8 @@ public final class HttpUtil {
         conn.setRequestProperty("Connection", "Keep-Alive");
         conn.setRequestProperty("User-Agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1;SV1)");
         conn.setRequestProperty("Charset", ENCODE);
-        conn.setConnectTimeout(8 * 1000);
-        conn.setReadTimeout(30 * 1000);
+        conn.setConnectTimeout(5 * 1000);
+        conn.setReadTimeout(readTimeout);
         conn.setDoInput(true);
         HttpURLConnection httpConn = (HttpURLConnection) conn;
         // 设置自动执行重定向
@@ -59,7 +59,6 @@ public final class HttpUtil {
                 httpConn.setRequestProperty(entry.getKey(), entry.getValue());
             }
         }
-
         return httpConn;
     }
 
@@ -107,11 +106,15 @@ public final class HttpUtil {
 
             OutputStream out = conn.getOutputStream();;
             if (formPara != null) {
-                conn.setRequestProperty("Content-Type", FORM_CONTENT_TYPE);
+                if (!head.containsKey("Content-Type")) {
+                    conn.setRequestProperty("Content-Type", FORM_CONTENT_TYPE);
+                }
                 String httpEntity = parseParam(formPara);
                 out.write(httpEntity.getBytes());
             } else if (jsonPara != null) {
-                conn.setRequestProperty("Content-Type", JSON_CONTENT_TYPE);
+                if (!head.containsKey("Content-Type")) {
+                    conn.setRequestProperty("Content-Type", JSON_CONTENT_TYPE);
+                }
                 out.write(jsonPara.getBytes());
             }
             out.flush();
@@ -129,13 +132,12 @@ public final class HttpUtil {
 
         String result = "";
         int responseCode = conn.getResponseCode();
-        if (responseCode == 200) {
-            result = inputStreamTOString(conn.getInputStream());
+        if (responseCode == HttpStatus.SC_OK) {
+            result = inputStreamToString(conn.getInputStream());
         } else{
             logger.info("url: {}", conn.getURL().toString());
-            logger.info("Http请求获取不到源码，响应码为：{}", responseCode);
+            logger.warn("Http请求获取不到源码，响应码为：{}", responseCode);
         }
-
         return result;
     }
 
@@ -149,7 +151,6 @@ public final class HttpUtil {
             conn.setUseCaches(false);
             conn.setDoOutput(true);
             conn.setRequestProperty("Content-Type", FILE_CONTENT_TYPE);
-            conn.setReadTimeout(1000 * 60 * 2);
             conn.connect();
 
             OutputStream out = new DataOutputStream(conn.getOutputStream());;
@@ -186,7 +187,7 @@ public final class HttpUtil {
 
                     out.write(formData.toString().getBytes());
                     InputStream in = new FileInputStream(entry.getValue());
-                    byte[] buffer = new byte[1024*1024];
+                    byte[] buffer = new byte[1024 * 1024];
                     int length = 0;
                     while ((length = in.read(buffer)) != -1) {
                         out.write(buffer, 0, length);
@@ -247,7 +248,7 @@ public final class HttpUtil {
             connection.setDoOutput(false);
             connection.setRequestMethod("GET");
             int responseCode = connection.getResponseCode();
-            if (responseCode == 200) {
+            if (responseCode == HttpStatus.SC_OK) {
                 inputStream = connection.getInputStream();
             }else{
                 logger.info("url: {}", url);
@@ -291,26 +292,27 @@ public final class HttpUtil {
                 e.printStackTrace();
             }
         }
-        str = str.replace("%3A", ":")
-                .replaceAll("%2F", "/")
-                .replaceAll("%3F", "?")
-                .replaceAll("%3D", "=")
-                .replaceAll("%26", "&")
-                .replaceAll(" ", "%20");
-
-        return str;
+        return str.replaceAll("%3A", ":")
+                  .replaceAll("%2F", "/")
+                  .replaceAll("%3F", "?")
+                  .replaceAll("%3D", "=")
+                  .replaceAll("%26", "&")
+                  .replaceAll(" ", "%20");
     }
 
-    private static String inputStreamTOString(InputStream in) throws Exception{
+    private static String inputStreamToString(InputStream in) throws Exception {
 
         ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-        byte[] data = new byte[4096 * 4];
+        int len = 4096 * 4;
+        byte[] data = new byte[len];
         int count;
-
-        while ((count = in.read(data,0,4096 * 4)) != -1) {
+        while ((count = in.read(data,0,len)) != -1) {
             outStream.write(data, 0, count);
         }
         return new String(outStream.toByteArray(), ENCODE);
     }
 
+    public void setReadTimeout(int timeout) {
+        readTimeout = timeout;
+    }
 }
