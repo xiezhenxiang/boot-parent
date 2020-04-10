@@ -296,12 +296,13 @@ public class MongoUtil {
                     }
                     try {
                         MongoClientOptions options = MongoClientOptions.builder()
-                            .connectionsPerHost(20)
+                            .connectionsPerHost(200)
                             .minConnectionsPerHost(1)
                             .maxConnectionIdleTime(0)
                             .maxConnectionLifeTime(0)
                             .connectTimeout(30000)
                             .socketTimeout(120000)
+                            .maxWaitTime(1000 * 60 * 10)
                             .build();
                         client = new MongoClient(urlList, options);
                         pool.put(ipPorts, client);
