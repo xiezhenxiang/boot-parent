@@ -6,8 +6,10 @@ import com.zaxxer.hikari.HikariDataSource;
 import indi.shine.boot.base.util.AlgorithmUtil;
 
 import java.sql.*;
-import java.util.Date;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -72,6 +74,20 @@ public class DriverUtil {
             close(con);
         }
         return result > 0;
+    }
+
+    /**
+     * 统计
+     * @param sql sql
+     **/
+    public long count(String sql, Object... params) {
+        Map<String, Object> one = findOne(sql, params);
+        for (Object v : one.values()) {
+            if (v instanceof Integer || v instanceof Long) {
+                return Long.parseLong(v.toString());
+            }
+        }
+        return 0;
     }
 
     /**
@@ -247,12 +263,7 @@ public class DriverUtil {
 
     public static void main(String[] args) {
 
-        DriverUtil driverUtil = DriverUtil.getMysqlInstance("192.168.4.11", 3306, "plantdata_manage", "root", "root@hiekn");
-        Map<String, Object> obj = new HashMap<>();
-        obj.put("name", "name");
-        obj.put("phone", "123");
-        obj.put("age", 18);
-        obj.put("date", new Date());
-        driverUtil.updateSelective("t_snapshot", obj, "name", "phone");
+        DriverUtil driverUtil = DriverUtil.getMysqlInstance("192.168.4.12", 3306, "model", "root", "root@hiekn");
+        System.out.println(driverUtil.count("select count(1) from t_user"));
     }
 }
