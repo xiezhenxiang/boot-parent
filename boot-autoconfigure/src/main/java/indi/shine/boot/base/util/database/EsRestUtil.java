@@ -27,16 +27,20 @@ public class EsRestUtil {
 
     private RestClient client;
     private HttpHost[] hosts;
-    private volatile static ConcurrentHashMap<String, RestClient> pool = new ConcurrentHashMap<>(10);
+    private String key;
+    private  static ConcurrentHashMap<String, RestClient> pool = new ConcurrentHashMap<>(10);
 
     private static HttpAsyncResponseConsumerFactory.HeapBufferedResponseConsumerFactory consumerFactory =
             new HttpAsyncResponseConsumerFactory.HeapBufferedResponseConsumerFactory(200 * 1024 * 1024);
 
-    public static EsRestUtil getInstance(HttpHost... hosts) {
-        if (hosts.length == 0) {
-            throw ServiceException.newInstance(60000, "elastic host is empty!");
+    private EsRestUtil(HttpHost... hosts) {
+        this.hosts = hosts;
+        StringBuilder builder = new StringBuilder();
+        for (HttpHost host : hosts) {
+            builder.append(host.toHostString()).append("_");
         }
-        return new EsRestUtil(hosts);
+        key = builder.substring(0, builder.length() - 1);
+        initClient();
     }
 
     public boolean exists(String index, String type) {
@@ -570,7 +574,7 @@ public class EsRestUtil {
 
     public static void main(String[] args) {
 
-        EsRestUtil restClient = getInstance(new HttpHost("192.168.4.11", 9200));
+        EsRestUtil restClient = new EsRestUtil(new HttpHost("192.168.4.11", 9200));
 
         ScrollRsp rs = restClient.findByScroll("kg_gw_help_test22", "data", null, null, 5000, null);
         int page = 1;
@@ -586,17 +590,11 @@ public class EsRestUtil {
         System.out.println(restClient.count("kg_gw_help_test22", "data", null));
     }
 
-    private EsRestUtil(HttpHost... hosts) {
-        this.hosts = hosts;
-        initClient();
-    }
-
     private void initClient() {
 
         if (client == null) {
             synchronized (EsRestUtil.class){
                 if (client == null) {
-                    String key = hostStr();
                     if (pool.containsKey(key)) {
                         client = pool.get(key);
                         if (client == null) {
@@ -606,49 +604,29 @@ public class EsRestUtil {
                         }
                     }
                     client = RestClient.builder(hosts)
-                            .setMaxRetryTimeoutMillis(1000 * 60)
-                            .setRequestConfigCallback(request -> {
-                                request.setConnectTimeout(1000 * 5);
-                                request.setConnectionRequestTimeout(1000 * 5);
-                                request.setSocketTimeout(1000 * 60 * 2);
-                                return request;
-                            })
-                            .setHttpClientConfigCallback(s ->
-                                s.setDefaultIOReactorConfig(IOReactorConfig.custom()
-                                        .setIoThreadCount(Runtime.getRuntime().availableProcessors())
-                                        .setConnectTimeout(1000 * 5)
-                                        .setSoTimeout(1000 * 60)
-                                        .build())
-                            )
-                            .build();
+                        .setMaxRetryTimeoutMillis(1000 * 60)
+                        .setRequestConfigCallback(request -> {
+                            request.setConnectTimeout(1000 * 5);
+                            request.setConnectionRequestTimeout(1000 * 5);
+                            request.setSocketTimeout(1000 * 60 * 2);
+                            return request;
+                        })
+                        .setHttpClientConfigCallback(s ->
+                            s.setDefaultIOReactorConfig(IOReactorConfig.custom()
+                                .setIoThreadCount(Runtime.getRuntime().availableProcessors())
+                                .setConnectTimeout(1000 * 5)
+                                .setSoTimeout(1000 * 60)
+                                .build())
+                        )
+                        .build();
                     pool.put(key, client);
                 }
             }
         }
     }
 
-    private String hostStr() {
-
-        StringBuilder builder = new StringBuilder();
-        for (HttpHost host : hosts) {
-            builder.append(host.toHostString()).append("_");
-        }
-        return builder.substring(0, builder.length() - 1);
-    }
-
     public RestClient getClient() {
         initClient();
         return client;
-    }
-
-    public void close () {
-        if (client != null) {
-            try {
-                client.close();
-                client = null;
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
     }
 }

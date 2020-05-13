@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 import static java.util.concurrent.TimeUnit.MINUTES;
 
@@ -25,28 +24,26 @@ public class DriverUtil {
     private String url;
     private String userName;
     private String pwd;
+    private String key;
     private static ConcurrentHashMap<String, HikariDataSource> pool = new ConcurrentHashMap<>();
 
     public static DriverUtil getInstance(String url, String userName, String pwd ) {
-
         return new DriverUtil(url, userName, pwd);
     }
 
     public static DriverUtil getMysqlInstance(String ip, Integer port, String database, String userName, String pwd) {
-
         String url = "jdbc:mysql://" + ip + ":" + port + "/"  + database
                 + "?serverTimezone=UTC&characterEncoding=utf8&autoReconnect=true&failOverReadOnly=false&useSSL=false";
         return new DriverUtil(url, userName, pwd);
     }
 
     private DriverUtil(String url, String userName, String pwd) {
-
         this.url = url;
         this.userName = userName;
         this.pwd = pwd;
+        key = AlgorithmUtil.elfHash(url + userName + pwd).toString();
         initDataSource();
     }
-
 
     /**
      * 增删改
@@ -54,7 +51,6 @@ public class DriverUtil {
      * @param params 参数
      **/
     public boolean update(String sql, Object... params) {
-
         Connection con = getConnection();
         PreparedStatement statement;
         int result = 0;
@@ -66,10 +62,10 @@ public class DriverUtil {
                     statement.setObject(index++, para);
                 }
             }
-            // update lines num
             result = statement.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
+            throw new RuntimeException("jdbc executeUpdate fail");
         } finally {
             close(con);
         }
@@ -96,7 +92,6 @@ public class DriverUtil {
      * @param params 参数
      **/
     public List<Map<String, Object>> findMany(String sql, Object... params){
-
         Connection con = getConnection();
         List<Map<String, Object>> ls = new ArrayList<>();
         PreparedStatement statement;
@@ -121,7 +116,8 @@ public class DriverUtil {
                 ls.add(obj);
             }
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
+            throw new RuntimeException("jdbc executeQuery fail");
         } finally {
             close(con);
         }
@@ -133,24 +129,7 @@ public class DriverUtil {
         return ls.isEmpty() ? null : ls.get(0);
     }
 
-    public List<String> getTables() {
-
-        List<String> ls;
-        if (url.contains("jdbc:hive2")) {
-            ls = findMany("show tables").stream().map(s -> s.get("tab_name").toString()).collect(Collectors.toList());
-        } else {
-
-            String dbName =url.substring(url.lastIndexOf("/") + 1, url.lastIndexOf("?"));
-            String infoMysqlUrl = url.replaceAll("/" + dbName, "/information_schema");
-            DriverUtil infoMysqlUtil = getInstance(infoMysqlUrl, userName, pwd);
-            String sql = "select TABLE_NAME, TABLE_COMMENT from TABLES where TABLE_SCHEMA = ?";
-            ls = infoMysqlUtil.findMany(sql, dbName).stream().map(s -> s.get("TABLE_NAME").toString()).collect(Collectors.toList());
-        }
-        return ls;
-    }
-
     public boolean insertSelective(String tbName, Map<String, Object> bean) {
-
         StringBuilder sql = new StringBuilder("insert into `" + tbName + "` (");
         List<Object> values = new ArrayList<>();
         for (Map.Entry<String, Object> entry : bean.entrySet()) {
@@ -171,9 +150,7 @@ public class DriverUtil {
     }
 
     public boolean updateSelective(String tbName, Map<String, Object> bean, String... queryField) {
-
         List<String> queryFieldLs = Lists.newArrayList(queryField);
-
         StringBuilder sql = new StringBuilder("update `" + tbName + "` set ");
         List<Object> values = new ArrayList<>();
         for (Map.Entry<String, Object> entry : bean.entrySet()) {
@@ -190,7 +167,6 @@ public class DriverUtil {
                     sql.append(field).append( " = ? and ");
                     values.add(bean.get(field));
                 }
-
                 sql = new StringBuilder(sql.substring(0, sql.length() - 5));
             }
             return update(sql.toString(), values.toArray());
@@ -200,56 +176,49 @@ public class DriverUtil {
 
 
     private void initDataSource() {
-
-        if (dataSource == null || dataSource.isClosed()) {
-
-            String key = AlgorithmUtil.elfHash(url + userName + pwd).toString();
-
-            if (pool.containsKey(key)) {
-                dataSource = pool.get(key);
-                if (dataSource == null || dataSource.isClosed()) {
-                    pool.remove(key);
-                } else {
-                    return;
-                }
-            }
-
-            HikariConfig config = new HikariConfig();
-            config.setJdbcUrl(url);
-            config.setUsername(userName);
-            config.setPassword(pwd);
-
-            String driveClassName = "com.mysql.jdbc.Driver";
-            if (url.contains("jdbc:dm:")) {
-                driveClassName = "dm.jdbc.driver.DmDriver";
-            } else if (url.contains("jdbc:hive")) {
-                driveClassName = "org.apache.hive.jdbc.HiveDriver";
-            }
-            config.setDriverClassName(driveClassName);
-            config.setConnectionTestQuery("SELECT 1");
-            config.setMinimumIdle(10);
-            config.setMaximumPoolSize(20);
-            config.setConnectionTimeout(3000);
-            config.setValidationTimeout(5000);
-            config.setMaxLifetime(MINUTES.toMillis(30));
-            config.setIdleTimeout(MINUTES.toMillis(10));
-            config.addDataSourceProperty("cachePrepStmts", "true");
-            config.addDataSourceProperty("prepStmtCacheSize", "250");
-            config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
-            config.addDataSourceProperty("useServerPrepStmts", "true");
-
-            dataSource = new HikariDataSource(config);
-            pool.put(key, dataSource);
+        if (dataSource != null && !dataSource.isClosed()) {
+            return;
         }
+        if (pool.containsKey(key)) {
+            dataSource = pool.get(key);
+            return;
+        }
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl(url);
+        config.setUsername(userName);
+        config.setPassword(pwd);
+
+        String driveClassName = "com.mysql.jdbc.Driver";
+        if (url.contains("jdbc:dm:")) {
+            driveClassName = "dm.jdbc.driver.DmDriver";
+        } else if (url.contains("jdbc:hive")) {
+            driveClassName = "org.apache.hive.jdbc.HiveDriver";
+        }
+        config.setDriverClassName(driveClassName);
+        config.setConnectionTestQuery("SELECT 1");
+        config.setMinimumIdle(10);
+        config.setMaximumPoolSize(50);
+        config.setConnectionTimeout(3000);
+        config.setValidationTimeout(5000);
+        config.setMaxLifetime(MINUTES.toMillis(30));
+        config.setIdleTimeout(MINUTES.toMillis(10));
+        config.addDataSourceProperty("cachePrepStmts", "true");
+        config.addDataSourceProperty("prepStmtCacheSize", "250");
+        config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+        config.addDataSourceProperty("useServerPrepStmts", "true");
+
+        dataSource = new HikariDataSource(config);
+        pool.put(key, dataSource);
     }
 
     public Connection getConnection() {
-
         initDataSource();
         try {
             return dataSource.getConnection();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            pool.remove(key);
+            e.printStackTrace();
+            throw new RuntimeException("get jdbc connection fail");
         }
     }
 
@@ -262,7 +231,6 @@ public class DriverUtil {
     }
 
     public static void main(String[] args) {
-
         DriverUtil driverUtil = DriverUtil.getMysqlInstance("192.168.4.12", 3306, "model", "root", "root@hiekn");
         System.out.println(driverUtil.count("select count(1) from t_user"));
     }
