@@ -29,7 +29,7 @@
         <jwt.version>3.1.0</jwt.version>
         <poi.version>3.9</poi.version>
         <commons-lang.version>3.7</commons-lang.version>
-        <commons-io.version>2.6</commons-io.version>
+        <commons-io.version>2.7</commons-io.version>
         <guava.version>23.0</guava.version>
         <es.version>5.5.3</es.version>
         <java.version>1.8</java.version>
