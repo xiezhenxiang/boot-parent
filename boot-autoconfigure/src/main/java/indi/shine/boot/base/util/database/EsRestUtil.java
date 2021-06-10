@@ -6,7 +6,11 @@ import indi.shine.boot.base.util.Snowflake;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
 import org.apache.http.entity.ContentType;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.nio.reactor.IOReactorConfig;
 import org.apache.http.nio.entity.NStringEntity;
 import org.apache.http.util.EntityUtils;
@@ -27,19 +31,25 @@ public class EsRestUtil {
 
     private RestClient client;
     private HttpHost[] hosts;
+    private String userName;
+    private String password;
     private String key;
     private  static ConcurrentHashMap<String, RestClient> pool = new ConcurrentHashMap<>(10);
 
     private static HttpAsyncResponseConsumerFactory.HeapBufferedResponseConsumerFactory consumerFactory =
             new HttpAsyncResponseConsumerFactory.HeapBufferedResponseConsumerFactory(200 * 1024 * 1024);
 
-    private EsRestUtil(HttpHost... hosts) {
-        this.hosts = hosts;
-        StringBuilder builder = new StringBuilder();
-        for (HttpHost host : hosts) {
-            builder.append(host.toHostString()).append("_");
+    private EsRestUtil(String addrs, String userName, String password) {
+
+        String[] ipArr = addrs.split(",");
+        hosts = new HttpHost[ipArr.length];
+        for (int i = 0; i < ipArr.length; i++) {
+            String[] ipPort = ipArr[i].split(":");
+            hosts[i] = new HttpHost(ipPort[0], Integer.parseInt(ipPort[1]));
         }
-        key = builder.substring(0, builder.length() - 1);
+        this.userName = userName;
+        this.password = password;
+        key = addrs;
         initClient();
     }
 
@@ -574,7 +584,7 @@ public class EsRestUtil {
 
     public static void main(String[] args) {
 
-        EsRestUtil restClient = new EsRestUtil(new HttpHost("192.168.4.11", 9200));
+        EsRestUtil restClient = new EsRestUtil("192.168.4.11:9200", "", "");
 
         ScrollRsp rs = restClient.findByScroll("kg_gw_help_test22", "data", null, null, 5000, null);
         int page = 1;
@@ -603,6 +613,8 @@ public class EsRestUtil {
                             return;
                         }
                     }
+                    final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+                    credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(userName, password));
                     client = RestClient.builder(hosts)
                         .setMaxRetryTimeoutMillis(1000 * 60)
                         .setRequestConfigCallback(request -> {
@@ -612,11 +624,12 @@ public class EsRestUtil {
                             return request;
                         })
                         .setHttpClientConfigCallback(s ->
-                            s.setDefaultIOReactorConfig(IOReactorConfig.custom()
-                                .setIoThreadCount(Runtime.getRuntime().availableProcessors())
-                                .setConnectTimeout(1000 * 5)
-                                .setSoTimeout(1000 * 60)
-                                .build())
+                            s.setDefaultCredentialsProvider(credentialsProvider)
+                            .setDefaultIOReactorConfig(IOReactorConfig.custom()
+                            .setIoThreadCount(Runtime.getRuntime().availableProcessors())
+                            .setConnectTimeout(1000 * 5)
+                            .setSoTimeout(1000 * 60)
+                            .build())
                         )
                         .build();
                     pool.put(key, client);

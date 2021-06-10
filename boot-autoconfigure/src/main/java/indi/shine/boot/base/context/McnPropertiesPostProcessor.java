@@ -34,8 +34,6 @@ public class McnPropertiesPostProcessor implements EnvironmentPostProcessor, Ord
 
         mapProp.put("logging.level." + mapProp.get(JERSEY_BASE_PACKAGE) + ".dao", "info");
         propertySources.addLast(new MapPropertySource("init_prop", mapProp));
-
-
         try {
             String path = this.getClass().getResource("").getPath();
             path = path.replaceFirst("file:", "jar:file:");
@@ -53,7 +51,6 @@ public class McnPropertiesPostProcessor implements EnvironmentPostProcessor, Ord
         } catch (IOException e) {
             // TODO
         }
-
     }
 
     @Override

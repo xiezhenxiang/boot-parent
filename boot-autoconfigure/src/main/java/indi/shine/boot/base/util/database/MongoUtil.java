@@ -29,12 +29,16 @@ import java.util.stream.Collectors;
 public class MongoUtil {
 
     private String ipPorts;
+    private String userName;
+    private String password;
     private volatile MongoClient client;
     private List<ServerAddress> urlList = new ArrayList<>();
     private Integer batchSize = 3000;
     private static volatile ConcurrentHashMap<String, MongoClient> pool = new ConcurrentHashMap<>(20);
 
-    public MongoUtil(String ipPorts) {
+    public MongoUtil(String ipPorts, String userName, String password) {
+        this.userName = userName;
+        this.password = password;
         String[] hostArr = ipPorts.split(",");
         for (String one : hostArr) {
             String[] ipPort = one.split(":");

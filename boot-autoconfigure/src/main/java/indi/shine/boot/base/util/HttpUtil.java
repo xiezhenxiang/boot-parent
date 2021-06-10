@@ -62,6 +62,11 @@ public final class HttpUtil {
         return httpConn;
     }
 
+    public static void main(String[] args) {
+        String url = "https://zh.wikipedia.org/wiki/%E7%A1%85%E8%B0%B7%E5%9B%BE%E5%BD%A2%E5%85%AC%E5%8F%B8";
+        String s = sendGet(url, "192.168.4.155:8118");
+        System.out.println(s);
+    }
 
     public static String sendGet(String url, Map<String, String> head, String proxyHost) {
 
