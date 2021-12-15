@@ -21,7 +21,7 @@ import java.util.Map;
  **/
 public final class HttpUtil {
 
-    private static Logger logger = LoggerFactory.getLogger(HttpUtil.class);
+    private static final Logger logger = LoggerFactory.getLogger(HttpUtil.class);
     private static final String ENCODE = "utf-8";
     private static final String FORM_CONTENT_TYPE = "application/x-www-form-urlencoded;charset=utf-8";
     private static final String BOUNDARY = "----webkitformboundarykpioiok7ub8qe2ax";
@@ -29,9 +29,9 @@ public final class HttpUtil {
     private static final String FILE_CONTENT_TYPE = "multipart/form-data; boundary=" + BOUNDARY;
     private static final String JSON_CONTENT_TYPE = "application/json;charset=utf-8";
     private static int readTimeout = 30 * 1000;
+    private static String proxyHost = null;
 
-    private static HttpURLConnection openConnection(String url, Map<String, String> head, String proxyHost) throws IOException {
-
+    private static HttpURLConnection openConnection(String url, Map<String, String> head) throws IOException {
         URL realUrl = new URL(url);
         URLConnection conn;
         if(StringUtils.isNotBlank(proxyHost)){
@@ -53,7 +53,6 @@ public final class HttpUtil {
         HttpURLConnection httpConn = (HttpURLConnection) conn;
         // 设置自动执行重定向
         httpConn.setInstanceFollowRedirects(true);
-
         if (head != null) {
             for (Map.Entry<String, String> entry : head.entrySet()) {
                 httpConn.setRequestProperty(entry.getKey(), entry.getValue());
@@ -62,18 +61,11 @@ public final class HttpUtil {
         return httpConn;
     }
 
-    public static void main(String[] args) {
-        String url = "https://zh.wikipedia.org/wiki/%E7%A1%85%E8%B0%B7%E5%9B%BE%E5%BD%A2%E5%85%AC%E5%8F%B8";
-        String s = sendGet(url, "192.168.4.155:8118");
-        System.out.println(s);
-    }
-
-    public static String sendGet(String url, Map<String, String> head, String proxyHost) {
-
+    public static String sendGet(String url, Map<String, String> head) {
         url = getHttpUrl(url);
         String result = "";
         try {
-            HttpURLConnection connection = openConnection(url, head, proxyHost);
+            HttpURLConnection connection = openConnection(url, head);
             connection.setDoOutput(false);
             connection.setRequestMethod("GET");
             result = getResult(connection);
@@ -85,30 +77,18 @@ public final class HttpUtil {
         return result;
     }
 
-    public static String sendGet(String url, Map<String, String> head) {
-
-        return sendGet(url, head, null);
-    }
-
     public static String sendGet(String url) {
-
-        return sendGet(url,null,null);
+        return sendGet(url, null);
     }
 
-    public static String sendGet(String url, String proxyHost) {
-
-        return sendGet(url,null, proxyHost);
-    }
 
     private static String sendPost(String url, Map<String, String> head, Map<String, Object> formPara, String jsonPara, String method) {
-
         String result = "";
         try {
-            HttpURLConnection conn = openConnection(url, head, null);
+            HttpURLConnection conn = openConnection(url, head);
             conn.setRequestMethod(method);
             conn.setUseCaches(false);
             conn.setDoOutput(true);
-
             OutputStream out = conn.getOutputStream();;
             if (formPara != null) {
                 if (!head.containsKey("Content-Type")) {
@@ -124,7 +104,6 @@ public final class HttpUtil {
             }
             out.flush();
             out.close();
-
             result = getResult(conn);
         } catch (Exception e) {
             logger.info("url: {}", url);
@@ -134,7 +113,6 @@ public final class HttpUtil {
     }
 
     private static String getResult(HttpURLConnection conn) throws Exception {
-
         String result = "";
         int responseCode = conn.getResponseCode();
         if (responseCode == HttpStatus.SC_OK) {
@@ -147,11 +125,10 @@ public final class HttpUtil {
     }
 
     public static String sendFile(String url, Map<String, String> head, Map<String, Object> formPara, Map<String, File> filePara) {
-
         String result = "";
         String method = "POST";
         try {
-            HttpURLConnection conn = openConnection(url, head, null);
+            HttpURLConnection conn = openConnection(url, head);
             conn.setRequestMethod(method);
             conn.setUseCaches(false);
             conn.setDoOutput(true);
@@ -161,9 +138,7 @@ public final class HttpUtil {
             OutputStream out = new DataOutputStream(conn.getOutputStream());;
             StringBuilder formData = new StringBuilder();
             if (formPara != null && !formPara.isEmpty()) {
-
                 for (Map.Entry<String, Object> entry : formPara.entrySet()) {
-
                     formData.append(BOUNDARY_PREFIX).append(BOUNDARY).append(System.lineSeparator())
                             .append("Content-Disposition: form-data; name=\"")
                             .append(entry.getKey()).append("\"").append(System.lineSeparator())
@@ -176,9 +151,7 @@ public final class HttpUtil {
 
             }
             if (filePara != null && !filePara.isEmpty()) {
-
                 for (Map.Entry<String, File> entry : filePara.entrySet()) {
-
                     formData.append(BOUNDARY_PREFIX).append(BOUNDARY).append(System.lineSeparator());
                     formData.append("Content-Disposition: form-data; name=\"")
                             .append(entry.getKey()).append("\"; filename=\"")
@@ -214,7 +187,6 @@ public final class HttpUtil {
     }
 
     private static String getContentType(File file)  {
-
         Path path = Paths.get(file.getAbsolutePath());
         String contentType = null;
         try {
@@ -230,26 +202,21 @@ public final class HttpUtil {
     }
 
     public static String sendPut(String url, Map<String, String> head, String jsonPara) {
-
         return sendPost(url, head, null, jsonPara, "PUT");
     }
-
     public static String sendPost(String url, Map<String, String> head, Map<String, Object> formPara) {
-
         return sendPost(url, head, formPara, null, "POST");
     }
 
     public static String sendPost(String url, Map<String, String> head, String jsonPara) {
-
         return sendPost(url, head, null, jsonPara, "POST");
     }
 
-    public static InputStream download(String url, String proxyHost) {
-
+    public static InputStream download(String url) {
         url = getHttpUrl(url);
         InputStream inputStream = null;
         try {
-            HttpURLConnection connection = openConnection(url, null, proxyHost);
+            HttpURLConnection connection = openConnection(url, null);
             connection.setDoOutput(false);
             connection.setRequestMethod("GET");
             int responseCode = connection.getResponseCode();
@@ -266,13 +233,7 @@ public final class HttpUtil {
         return inputStream;
     }
 
-
-    public static InputStream download(String url) {
-        return download(url, null);
-    }
-
     private static String parseParam(Map<String, Object> param) {
-
         List<String> list = new ArrayList<>();
         param.forEach((k, v) -> {
             list.add(k + "=" + v);
@@ -290,7 +251,7 @@ public final class HttpUtil {
 
     private static String getHttpUrl(String str) {
 
-        if (StringUtil.isChinese(str)) {
+        if (StrUtil.isChinese(str)) {
             try {
                 str = URLEncoder.encode(str, ENCODE);
             } catch (Exception e) {
@@ -306,7 +267,6 @@ public final class HttpUtil {
     }
 
     private static String inputStreamToString(InputStream in) throws Exception {
-
         ByteArrayOutputStream outStream = new ByteArrayOutputStream();
         int len = 4096 * 4;
         byte[] data = new byte[len];
@@ -314,10 +274,14 @@ public final class HttpUtil {
         while ((count = in.read(data,0,len)) != -1) {
             outStream.write(data, 0, count);
         }
-        return new String(outStream.toByteArray(), ENCODE);
+        return outStream.toString(ENCODE);
     }
 
-    public void setReadTimeout(int timeout) {
+    public static void setReadTimeout(int timeout) {
         readTimeout = timeout;
+    }
+
+    public static void setProxyHost(String httpProxyHost) {
+        proxyHost = httpProxyHost;
     }
 }

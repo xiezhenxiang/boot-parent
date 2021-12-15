@@ -1,12 +1,18 @@
 package indi.shine.boot.base.util;
 
 import java.util.regex.Pattern;
+/**
+ * @author xiezhenxiang 2021/12/15
+ **/
+public class StrUtil {
 
-public class StringUtil {
-
-    /** check str null or empty */
-    public static boolean verify(String str){
-        return str != null && !str.isEmpty();
+    public static boolean isNotBlack(String... strArr){
+        for (String str : strArr) {
+            if (str == null || str.trim().isEmpty()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public static boolean isChinese(String str) {
@@ -20,7 +26,7 @@ public class StringUtil {
         return false;
     }
 
-    public static boolean isDouble(String str) {
+    public static boolean isFloat(String str) {
         if (str != null) {
             return Pattern.matches("^(-?\\d+)\\.(\\d+)?$", str);
         }
