@@ -23,7 +23,7 @@
         <project.build.sourceEncoding>UTF8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF8</project.reporting.outputEncoding>
         <jersey-swagger.version>1.5.19</jersey-swagger.version>
-        <mysql.version>5.1.47</mysql.version>
+        <mysql.version>8.0.28</mysql.version>
         <mybatis-generator.version>1.3.6</mybatis-generator.version>
         <mybatis-spring-boot.version>1.3.2</mybatis-spring-boot.version>
         <jwt.version>3.1.0</jwt.version>
